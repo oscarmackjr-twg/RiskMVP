@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/domains/trade.lifecycle_event.v1.json",
+  "title": "TradeLifecycleEventV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trade_id",
+    "event_type",
+    "portfolio_node_id",
+    "product",
+    "economic",
+    "status"
+  ],
+  "properties": {
+    "trade_id": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "NEW",
+        "AMEND",
+        "CANCEL"
+      ]
+    },
+    "event_effective_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "portfolio_node_id": {
+      "type": "string"
+    },
+    "counterparty_id": {
+      "type": "string"
+    },
+    "legal_entity_id": {
+      "type": "string"
+    },
+    "product": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "asset_class",
+        "product_type",
+        "instrument_id"
+      ],
+      "properties": {
+        "asset_class": {
+          "type": "string",
+          "enum": [
+            "FX",
+            "CONSUMER_LOANS",
+            "FIXED_INCOME"
+          ]
+        },
+        "product_type": {
+          "type": "string",
+          "enum": [
+            "FX_FWD",
+            "AMORT_LOAN",
+            "FIXED_BOND"
+          ]
+        },
+        "instrument_id": {
+          "type": "string"
+        }
+      }
+    },
+    "economic": {
+      "type": "object"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "INACTIVE"
+      ]
+    },
+    "tags": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "trade_id": "TRD-000001",
+  "event_type": "NEW",
+  "event_effective_time": "2026-01-22T00:00:00Z",
+  "portfolio_node_id": "BOOK-FX-001",
+  "counterparty_id": "CPTY-123",
+  "legal_entity_id": "LE-01",
+  "product": {
+    "asset_class": "FX",
+    "product_type": "FX_FWD",
+    "instrument_id": "INS-FXFWD-00001"
+  },
+  "economic": {
+    "trade_date": "2026-01-22",
+    "settle_date": "2026-02-22",
+    "buy_currency": "EUR",
+    "buy_amount": 1000000.0,
+    "sell_currency": "USD",
+    "sell_amount": 1085000.0,
+    "forward_rate": 1.085
+  },
+  "status": "ACTIVE",
+  "tags": {
+    "desk": "FX",
+    "book": "BOOK-FX-001"
+  }
+}

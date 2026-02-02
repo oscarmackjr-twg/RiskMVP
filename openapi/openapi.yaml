@@ -1,0 +1,533 @@
+openapi: 3.0.3
+info:
+  title: IPRS MVP API
+  version: 0.1.0
+servers:
+  - url: http://localhost:8000
+tags:
+  - name: Runs
+  - name: MarketData
+  - name: Positions
+  - name: Instruments
+  - name: Results
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: health
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                required: [ok]
+
+  /api/v1/marketdata/snapshots:
+    post:
+      tags: [MarketData]
+      summary: Create market data snapshot
+      operationId: createMarketDataSnapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarketDataSnapshotV1"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  snapshot_id: { type: string }
+                required: [snapshot_id]
+
+  /api/v1/marketdata/snapshots/{snapshotId}:
+    get:
+      tags: [MarketData]
+      summary: Get market data snapshot by ID
+      operationId: getMarketDataSnapshot
+      parameters:
+        - in: path
+          name: snapshotId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketDataSnapshotV1"
+        "404":
+          description: Not found
+
+  /api/v1/positions/snapshot:
+    post:
+      tags: [Positions]
+      summary: Build and persist a position snapshot
+      operationId: createPositionSnapshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [as_of_time, portfolio_node_id]
+              properties:
+                as_of_time: { type: string, format: date-time }
+                portfolio_node_id: { type: string }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  position_snapshot_id: { type: string }
+                required: [position_snapshot_id]
+
+  /api/v1/positions:
+    get:
+      tags: [Positions]
+      summary: Query positions for a snapshot scope
+      operationId: getPositions
+      parameters:
+        - in: query
+          name: asOf
+          required: true
+          schema: { type: string, format: date-time }
+        - in: query
+          name: portfolioNodeId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: PositionSnapshotV1
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PositionSnapshotV1"
+
+  /api/v1/instruments:
+    post:
+      tags: [Instruments]
+      summary: Create an instrument (new version)
+      operationId: createInstrument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstrumentV1"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  instrument_id: { type: string }
+                  version: { type: integer }
+                required: [instrument_id, version]
+    get:
+      tags: [Instruments]
+      summary: List instruments (filter by type)
+      operationId: listInstruments
+      parameters:
+        - in: query
+          name: type
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          description: Instruments
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/InstrumentV1" }
+
+  /api/v1/instruments/{instrumentId}:
+    get:
+      tags: [Instruments]
+      summary: Get latest APPROVED version of an instrument
+      operationId: getInstrument
+      parameters:
+        - in: path
+          name: instrumentId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Instrument
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InstrumentV1" }
+        "404":
+          description: Not found
+
+  /api/v1/runs:
+    post:
+      tags: [Runs]
+      summary: Create a run and enqueue tasks
+      operationId: createRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunRequestedV1"
+      responses:
+        "201":
+          description: Run created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  run_id: { type: string }
+                  status: { type: string }
+                required: [run_id, status]
+    get:
+      tags: [Runs]
+      summary: List runs
+      operationId: listRuns
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema: { type: string }
+        - in: query
+          name: type
+          required: false
+          schema: { type: string }
+        - in: query
+          name: from
+          required: false
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: Runs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RunRecord"
+
+  /api/v1/runs/{runId}:
+    get:
+      tags: [Runs]
+      summary: Get run status and metadata
+      operationId: getRun
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Run
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RunRecord" }
+        "404":
+          description: Not found
+
+  /api/v1/runs/{runId}/cancel:
+    post:
+      tags: [Runs]
+      summary: Cancel a run
+      operationId: cancelRun
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Cancel requested
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  run_id: { type: string }
+                  status: { type: string }
+                required: [run_id, status]
+
+  /api/v1/runs/{runId}/publish:
+    post:
+      tags: [Runs]
+      summary: Publish a completed run (immutable ledger)
+      operationId: publishRun
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [published_by, approvals_json]
+              properties:
+                published_by: { type: string }
+                approvals_json: { type: object }
+      responses:
+        "200":
+          description: Published
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  publish_id: { type: string }
+                  immutable_hash: { type: string }
+                required: [publish_id, immutable_hash]
+
+  /api/v1/results/{runId}/summary:
+    get:
+      tags: [Results]
+      summary: Get run results summary
+      operationId: getRunResultsSummary
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /api/v1/results/{runId}/positions:
+    get:
+      tags: [Results]
+      summary: List position results for a run
+      operationId: listRunPositionResults
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: limit
+          required: false
+          schema: { type: integer, default: 100, minimum: 1, maximum: 1000 }
+        - in: query
+          name: offset
+          required: false
+          schema: { type: integer, default: 0, minimum: 0 }
+        - in: query
+          name: scenario_id
+          required: false
+          schema: { type: string, default: "BASE" }
+      responses:
+        "200":
+          description: Position results
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ResultWrittenV1" }
+
+  /api/v1/results/{runId}/cube:
+    get:
+      tags: [Results]
+      summary: Aggregate a measure by a dimension
+      operationId: getRunResultCube
+      parameters:
+        - in: path
+          name: runId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: measure
+          required: true
+          schema: { type: string }
+        - in: query
+          name: by
+          required: true
+          schema:
+            type: string
+            enum: [portfolio_node_id, product_type]
+        - in: query
+          name: scenario_id
+          required: false
+          schema: { type: string, default: "BASE" }
+      responses:
+        "200":
+          description: Aggregation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key: { type: string }
+                    value: { type: number }
+                  required: [key, value]
+
+components:
+  schemas:
+    MarketDataSnapshotV1:
+      type: object
+      required: [snapshot_id, as_of_time, vendor, universe_id, fx_spots, curves, quality]
+      properties:
+        snapshot_id: { type: string }
+        as_of_time: { type: string, format: date-time }
+        vendor: { type: string }
+        universe_id: { type: string }
+        fx_spots:
+          type: array
+          items:
+            type: object
+            required: [pair, spot, ts]
+            properties:
+              pair: { type: string }
+              spot: { type: number }
+              ts: { type: string, format: date-time }
+        curves:
+          type: array
+          items:
+            type: object
+            required: [curve_id, curve_type, nodes]
+            properties:
+              curve_id:
+                type: string
+                enum: [USD-OIS, EUR-OIS, LOAN-SPREAD, FI-SPREAD]
+              curve_type:
+                type: string
+                enum: [DISCOUNT, SPREAD]
+              nodes:
+                type: array
+                items:
+                  type: object
+                  required: [tenor, zero_rate]
+                  properties:
+                    tenor: { type: string }
+                    zero_rate: { type: number }
+        quality:
+          type: object
+          required: [dq_status, issues]
+          properties:
+            dq_status: { type: string, enum: [PASS, WARN, FAIL] }
+            issues:
+              type: array
+              items: { type: string }
+
+    PositionSnapshotV1:
+      type: object
+      required: [position_snapshot_id, as_of_time, portfolio_node_id, positions]
+      properties:
+        position_snapshot_id: { type: string }
+        as_of_time: { type: string, format: date-time }
+        portfolio_node_id: { type: string }
+        positions:
+          type: array
+          items:
+            type: object
+            required: [position_id, instrument_id, product_type, quantity]
+            properties:
+              position_id: { type: string }
+              instrument_id: { type: string }
+              product_type: { type: string, enum: [FX_FWD, AMORT_LOAN, FIXED_BOND] }
+              quantity: { type: number }
+              attributes: { type: object }
+
+    InstrumentV1:
+      type: object
+      required: [instrument_id, instrument_type, version, terms, conventions, risk_modeling]
+      properties:
+        instrument_id: { type: string }
+        instrument_type: { type: string, enum: [FX_FWD, AMORT_LOAN, FIXED_BOND] }
+        version: { type: integer, minimum: 1 }
+        terms: { type: object }
+        conventions: { type: object }
+        underlyings: { type: object }
+        risk_modeling: { type: object }
+        governance: { type: object }
+
+    RunRequestedV1:
+      type: object
+      required: [run_id, run_type, as_of_time, market_snapshot_id, measures, scenarios, portfolio_scope]
+      properties:
+        run_id: { type: string }
+        run_type: { type: string, enum: [EOD_OFFICIAL, INTRADAY, SANDBOX] }
+        as_of_time: { type: string, format: date-time }
+        market_snapshot_id: { type: string }
+        model_set_id: { type: string }
+        portfolio_scope:
+          type: object
+          required: [node_ids]
+          properties:
+            node_ids:
+              type: array
+              items: { type: string }
+        measures:
+          type: array
+          items: { type: string }
+        scenarios:
+          type: array
+          items: { type: object }
+        execution: { type: object }
+
+    RunRecord:
+      type: object
+      required: [run_id, run_type, status, requested_at, as_of_time, market_snapshot_id, measures]
+      properties:
+        run_id: { type: string }
+        run_type: { type: string }
+        status: { type: string }
+        requested_by: { type: string }
+        requested_at: { type: string, format: date-time }
+        as_of_time: { type: string, format: date-time }
+        market_snapshot_id: { type: string }
+        model_set_id: { type: string }
+        measures:
+          type: array
+          items: { type: string }
+        scenarios: { type: object }
+        portfolio_scope: { type: object }
+        started_at: { type: string, format: date-time }
+        completed_at: { type: string, format: date-time }
+        summary_json: { type: object }
+        error_json: { type: object }
+
+    ResultWrittenV1:
+      type: object
+      required: [run_id, position_id, instrument_id, portfolio_node_id, product_type, base_ccy, scenario_id, measures, compute_meta, lineage]
+      properties:
+        run_id: { type: string }
+        position_id: { type: string }
+        instrument_id: { type: string }
+        portfolio_node_id: { type: string }
+        product_type: { type: string, enum: [FX_FWD, AMORT_LOAN, FIXED_BOND] }
+        base_ccy: { type: string, enum: [USD] }
+        scenario_id: { type: string }
+        measures: { type: object }
+        compute_meta: { type: object }
+        lineage:
+          type: object
+          required: [market_snapshot_id, model_set_id, input_hash]
+          properties:
+            market_snapshot_id: { type: string }
+            model_set_id: { type: string }
+            input_hash: { type: string }

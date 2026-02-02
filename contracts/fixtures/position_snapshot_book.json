@@ -1,0 +1,16 @@
+{
+  "position_snapshot_id": "PSS-20260123-1700Z-BOOK-FX-001",
+  "as_of_time": "2026-01-23T17:00:00Z",
+  "portfolio_node_id": "BOOK-FX-001",
+  "positions": [
+    {
+      "position_id": "POS-00001",
+      "instrument_id": "INS-FXFWD-00001",
+      "product_type": "FX_FWD",
+      "quantity": 1.0,
+      "attributes": {
+        "trade_id": "TRD-000001"
+      }
+    }
+  ]
+}

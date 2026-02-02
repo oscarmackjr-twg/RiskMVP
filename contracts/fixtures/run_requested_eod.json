@@ -1,0 +1,33 @@
+{
+  "run_id": "RUN-20260123-EOD-001",
+  "run_type": "EOD_OFFICIAL",
+  "as_of_time": "2026-01-23T17:00:00Z",
+  "market_snapshot_id": "MDS-20260123-1700Z",
+  "model_set_id": "MODELSET-USD-001",
+  "portfolio_scope": {
+    "node_ids": [
+      "BOOK-FX-001"
+    ]
+  },
+  "measures": [
+    "PV",
+    "DV01",
+    "FX_DELTA"
+  ],
+  "scenarios": [
+    {
+      "scenario_set_id": "BASE"
+    },
+    {
+      "scenario_set_id": "RATES_PARALLEL_1BP"
+    },
+    {
+      "scenario_set_id": "FX_SPOT_1PCT"
+    }
+  ],
+  "execution": {
+    "priority": "HIGH",
+    "queue": "PROD",
+    "max_workers": 200
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "tolerances": {
+    "PV": 1e-06,
+    "DV01": 1e-06,
+    "ACCRUED_INTEREST": 1e-06
+  },
+  "measures": ["PV", "DV01", "ACCRUED_INTEREST"],
+  "scenario_id": "BASE",
+  "expected": {
+    "PV": 1325.1163171498524,
+    "DV01": -0.01884792764803933,
+    "ACCRUED_INTEREST": 38.833333333333336
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "snapshot_id": "MKT-DEMO-20260123",
+  "as_of_time": "2026-01-23T00:00:00Z",
+  "vendor": "DEMO",
+  "universe_id": "USD",
+  "fx_spots": [
+    { "pair": "EURUSD", "spot": 1.09, "ts": "2026-01-23T00:00:00Z" }
+  ],
+  "curves": [
+    {
+      "curve_id": "USD-OIS",
+      "curve_type": "DISCOUNT",
+      "nodes": [
+        { "tenor": "1M", "zero_rate": 0.045 },
+        { "tenor": "6M", "zero_rate": 0.046 },
+        { "tenor": "1Y", "zero_rate": 0.047 }
+      ]
+    },
+    {
+      "curve_id": "LOAN-SPREAD",
+      "curve_type": "SPREAD",
+      "nodes": [
+        { "tenor": "1M", "zero_rate": 0.020 },
+        { "tenor": "6M", "zero_rate": 0.020 },
+        { "tenor": "1Y", "zero_rate": 0.020 }
+      ]
+    },
+    {
+      "curve_id": "FI-SPREAD",
+      "curve_type": "SPREAD",
+      "nodes": [
+        { "tenor": "1Y", "zero_rate": 0.015 }
+      ]
+    }
+  ],
+  "quality": { "dq_status": "PASS", "issues": [] }
+}

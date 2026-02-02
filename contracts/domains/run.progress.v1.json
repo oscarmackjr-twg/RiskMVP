@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/domains/run.progress.v1.json",
+  "title": "RunProgressV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "status",
+    "tasks_total",
+    "tasks_succeeded",
+    "tasks_failed",
+    "updated_at"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "QUEUED",
+        "RUNNING",
+        "FAILED",
+        "COMPLETED",
+        "CANCELLING",
+        "CANCELLED"
+      ]
+    },
+    "tasks_total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tasks_succeeded": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tasks_failed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "instrument_id": "INS-FXFWD-00001",
+  "instrument_type": "FX_FWD",
+  "version": 1,
+  "terms": {
+    "base_ccy": "EUR",
+    "quote_ccy": "USD",
+    "settle_date": "2026-02-22",
+    "deliverable": true
+  },
+  "conventions": {
+    "calendar": "NYC+LON",
+    "day_count": "ACT/360",
+    "spot_lag": "T+2"
+  },
+  "underlyings": {
+    "fx_pair": "EURUSD",
+    "discount_curve_domestic": "USD-OIS",
+    "discount_curve_foreign": "EUR-OIS"
+  },
+  "risk_modeling": {
+    "pricing_model": "DF_FOREIGN_DOMESTIC"
+  },
+  "governance": {
+    "status": "APPROVED",
+    "approved_by": "modelGov",
+    "approved_at": "2026-01-22T12:00:00Z"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "run_id": "RUN-DEMO-20260123-001",
+  "run_type": "SANDBOX",
+  "as_of_time": "2026-01-23T00:00:00Z",
+  "market_snapshot_id": "WILL_BE_OVERRIDDEN_BY_SCRIPT",
+  "model_set_id": "MODELSET-DEMO-001",
+  "portfolio_scope": { "node_ids": ["BOOK-PRIME-LOANS"] },
+  "measures": ["PV", "DV01"],
+  "scenarios": [{ "scenario_set_id": "BASE" }],
+  "execution": { "hash_mod": 8 }
+}

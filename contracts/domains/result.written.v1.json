@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/domains/result.written.v1.json",
+  "title": "ResultWrittenV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "position_id",
+    "instrument_id",
+    "portfolio_node_id",
+    "product_type",
+    "base_ccy",
+    "scenario_id",
+    "measures",
+    "compute_meta",
+    "lineage"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "position_id": {
+      "type": "string"
+    },
+    "instrument_id": {
+      "type": "string"
+    },
+    "portfolio_node_id": {
+      "type": "string"
+    },
+    "product_type": {
+      "type": "string",
+      "enum": [
+        "FX_FWD",
+        "AMORT_LOAN",
+        "FIXED_BOND"
+      ]
+    },
+    "base_ccy": {
+      "type": "string",
+      "enum": [
+        "USD"
+      ]
+    },
+    "scenario_id": {
+      "type": "string"
+    },
+    "measures": {
+      "type": "object"
+    },
+    "compute_meta": {
+      "type": "object"
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "market_snapshot_id",
+        "model_set_id",
+        "input_hash"
+      ],
+      "properties": {
+        "market_snapshot_id": {
+          "type": "string"
+        },
+        "model_set_id": {
+          "type": "string"
+        },
+        "input_hash": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

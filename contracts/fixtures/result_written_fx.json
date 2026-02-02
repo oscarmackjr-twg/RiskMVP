@@ -1,0 +1,26 @@
+{
+  "run_id": "RUN-20260123-EOD-001",
+  "position_id": "POS-00001",
+  "instrument_id": "INS-FXFWD-00001",
+  "portfolio_node_id": "BOOK-FX-001",
+  "product_type": "FX_FWD",
+  "base_ccy": "USD",
+  "scenario_id": "BASE",
+  "measures": {
+    "PV": 12500.12,
+    "DV01": -320.55,
+    "FX_DELTA": 980000.0
+  },
+  "compute_meta": {
+    "engine_version": "pricer-0.1.0",
+    "code_hash": "git:abc123",
+    "env_hash": "docker:sha256:deadbeef",
+    "start_time": "2026-01-23T18:10:00Z",
+    "end_time": "2026-01-23T18:10:02Z"
+  },
+  "lineage": {
+    "market_snapshot_id": "MDS-20260123-1700Z",
+    "model_set_id": "MODELSET-USD-001",
+    "input_hash": "sha256:feedface"
+  }
+}

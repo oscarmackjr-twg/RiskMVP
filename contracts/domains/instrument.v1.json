@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/domains/instrument.v1.json",
+  "title": "InstrumentV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "instrument_id",
+    "instrument_type",
+    "version",
+    "terms",
+    "conventions",
+    "risk_modeling"
+  ],
+  "properties": {
+    "instrument_id": {
+      "type": "string"
+    },
+    "instrument_type": {
+      "type": "string",
+      "enum": [
+        "FX_FWD",
+        "AMORT_LOAN",
+        "FIXED_BOND"
+      ]
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "terms": {
+      "type": "object"
+    },
+    "conventions": {
+      "type": "object"
+    },
+    "underlyings": {
+      "type": "object"
+    },
+    "risk_modeling": {
+      "type": "object"
+    },
+    "governance": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "snapshot_id": "MDS-20260123-1700Z",
+  "as_of_time": "2026-01-23T17:00:00Z",
+  "vendor": "PRIMARY",
+  "universe_id": "EOD-OFFICIAL",
+  "fx_spots": [
+    {
+      "pair": "EURUSD",
+      "spot": 1.0842,
+      "ts": "2026-01-23T16:59:30Z"
+    }
+  ],
+  "curves": [
+    {
+      "curve_id": "USD-OIS",
+      "curve_type": "DISCOUNT",
+      "nodes": [
+        {
+          "tenor": "1M",
+          "zero_rate": 0.04
+        },
+        {
+          "tenor": "3M",
+          "zero_rate": 0.0405
+        },
+        {
+          "tenor": "6M",
+          "zero_rate": 0.041
+        },
+        {
+          "tenor": "1Y",
+          "zero_rate": 0.0415
+        },
+        {
+          "tenor": "2Y",
+          "zero_rate": 0.042
+        },
+        {
+          "tenor": "5Y",
+          "zero_rate": 0.043
+        },
+        {
+          "tenor": "10Y",
+          "zero_rate": 0.044
+        }
+      ]
+    },
+    {
+      "curve_id": "EUR-OIS",
+      "curve_type": "DISCOUNT",
+      "nodes": [
+        {
+          "tenor": "1M",
+          "zero_rate": 0.03
+        },
+        {
+          "tenor": "3M",
+          "zero_rate": 0.0305
+        },
+        {
+          "tenor": "6M",
+          "zero_rate": 0.031
+        },
+        {
+          "tenor": "1Y",
+          "zero_rate": 0.0315
+        },
+        {
+          "tenor": "2Y",
+          "zero_rate": 0.032
+        },
+        {
+          "tenor": "5Y",
+          "zero_rate": 0.033
+        },
+        {
+          "tenor": "10Y",
+          "zero_rate": 0.034
+        }
+      ]
+    },
+    {
+      "curve_id": "LOAN-SPREAD",
+      "curve_type": "SPREAD",
+      "nodes": [
+        {
+          "tenor": "1Y",
+          "zero_rate": 0.012
+        }
+      ]
+    },
+    {
+      "curve_id": "FI-SPREAD",
+      "curve_type": "SPREAD",
+      "nodes": [
+        {
+          "tenor": "1Y",
+          "zero_rate": 0.008
+        }
+      ]
+    }
+  ],
+  "quality": {
+    "dq_status": "PASS",
+    "issues": []
+  }
+}

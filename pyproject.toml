@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "iprs-mvp"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "psycopg[binary]>=3.1.18",
+  "pytest>=7.4.0",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["compute*"]
+exclude = ["contracts*", "db*", "openapi*", "services*", "sql*", "ui*"]
+
+[tool.pytest.ini_options]
+testpaths = ["compute/tests"]

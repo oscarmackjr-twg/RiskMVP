@@ -1,0 +1,129 @@
+{
+  "as_of_time": "2026-01-23T00:00:00Z",
+  "portfolio_node_id": "BOOK-PRIME-LOANS",
+  "positions": [
+    {
+      "position_id": "POS-SFC_5685642",
+      "instrument_id": "SFC_5685642",
+      "product_type": "AMORT_LOAN",
+      "quantity": 1.0,
+      "attributes": {
+        "as_of_date": "2026-01-23",
+        "last_payment_date": "2025-12-23",
+        "current_principal": 20229.7,
+        "coupon_rate": 0.195,
+        "monthly_payment": 443.15,
+        "platform": "PRIME",
+        "fico": 730,
+        "state": "FL",
+        "city": "RUSKIN",
+        "loan_program": "NINP - 20 Mo",
+        "term_months": 84,
+        "instrument": {
+          "instrument_type": "AMORT_LOAN",
+          "terms": {
+            "currency": "USD",
+            "day_count": "30/360",
+            "payment_frequency": "MONTHLY",
+            "original_term_months": 84,
+            "coupon_rate": 0.195
+          },
+          "risk_modeling": {
+            "discount_curve": "USD-OIS",
+            "spread_curve": "LOAN-SPREAD"
+          }
+        },
+        "cashflows": [
+          { "pay_date": "2026-02-23", "interest": 328.732625, "principal": 114.417375, "amount": 443.15  },
+          { "pay_date": "2026-03-23", "interest": 326.87334265625, "principal": 116.27665734375, "amount": 443.15 },
+          { "pay_date": "2026-04-23", "interest": 324.98384697441406, "principal": 118.16615302558591, "amount": 443.15 },
+          { "pay_date": "2026-05-23", "interest": 323.0636469877483, "principal": 120.08635301225166, "amount": 443.15 },
+          { "pay_date": "2026-06-23", "interest": 321.1122437512992, "principal": 122.03775624870076, "amount": 443.15 },
+          { "pay_date": "2026-07-23", "interest": 319.12913021225785, "principal": 124.02086978774213, "amount": 443.15 }
+        ]
+      }
+    },
+    {
+      "position_id": "POS-SFC_5707491",
+      "instrument_id": "SFC_5707491",
+      "product_type": "AMORT_LOAN",
+      "quantity": 1.0,
+      "attributes": {
+        "as_of_date": "2026-01-23",
+        "last_payment_date": "2025-12-23",
+        "current_principal": 79276.5,
+        "coupon_rate": 0.195,
+        "monthly_payment": 1736.64,
+        "platform": "PRIME",
+        "fico": 754,
+        "state": "FL",
+        "city": "MAITLAND",
+        "loan_program": "NINP - 20 Mo",
+        "term_months": 84,
+        "instrument": {
+          "instrument_type": "AMORT_LOAN",
+          "terms": {
+            "currency": "USD",
+            "day_count": "30/360",
+            "payment_frequency": "MONTHLY",
+            "original_term_months": 84,
+            "coupon_rate": 0.195
+          },
+          "risk_modeling": {
+            "discount_curve": "USD-OIS",
+            "spread_curve": "LOAN-SPREAD"
+          }
+        },
+        "cashflows": [
+          { "pay_date": "2026-02-23", "interest": 1288.243125, "principal": 448.396875, "amount": 443.15 },
+          { "pay_date": "2026-03-23", "interest": 1280.95667578125, "principal": 455.68332421875016, "amount": 443.15 },
+          { "pay_date": "2026-04-23", "interest": 1273.5518217626952, "principal": 463.0881782373049, "amount": 443.15 },
+          { "pay_date": "2026-05-23", "interest": 1266.026638866339, "principal": 470.6133611336611, "amount": 443.15 },
+          { "pay_date": "2026-06-23", "interest": 1258.379171747917, "principal": 478.260828252083, "amount": 443.15 },
+          { "pay_date": "2026-07-23", "interest": 1250.6074332888209, "principal": 486.03256671117924, "amount": 443.15 }
+        ]
+      }
+    },
+    {
+      "position_id": "POS-SFC_5724283",
+      "instrument_id": "SFC_5724283",
+      "product_type": "AMORT_LOAN",
+      "quantity": 1.0,
+      "attributes": {
+        "as_of_date": "2026-01-23",
+        "last_payment_date": "2025-12-23",
+        "current_principal": 10046.8,
+        "coupon_rate": 0.1176101972397079,
+        "monthly_payment": 119.93,
+        "platform": "PRIME",
+        "fico": 731,
+        "state": "GA",
+        "city": "NEWNAN",
+        "loan_program": "Unsec Std - 1190 - 180",
+        "term_months": 180,
+        "instrument": {
+          "instrument_type": "AMORT_LOAN",
+          "terms": {
+            "currency": "USD",
+            "day_count": "30/360",
+            "payment_frequency": "MONTHLY",
+            "original_term_months": 180,
+            "coupon_rate": 0.1176101972397079
+          },
+          "risk_modeling": {
+            "discount_curve": "USD-OIS",
+            "spread_curve": "LOAN-SPREAD"
+          }
+        },
+        "cashflows": [
+          { "pay_date": "2026-02-23", "interest": 98.46717746899145, "principal": 21.462822531008555, "amount": 443.15 },
+          { "pay_date": "2026-03-23", "interest": 98.25682356972538, "principal": 21.673176430274623 , "amount": 443.15},
+          { "pay_date": "2026-04-23", "interest": 98.04440802349409, "principal": 21.88559197650592, "amount": 443.15 },
+          { "pay_date": "2026-05-23", "interest": 97.82991062440537, "principal": 22.100089375594635, "amount": 443.15 },
+          { "pay_date": "2026-06-23", "interest": 97.61331096853212, "principal": 22.316689031467888 , "amount": 443.15},
+          { "pay_date": "2026-07-23", "interest": 97.39458845197144, "principal": 22.535411548028563 , "amount": 443.15}
+        ]
+      }
+    }
+  ]
+}

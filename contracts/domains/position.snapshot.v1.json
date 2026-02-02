@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/domains/position.snapshot.v1.json",
+  "title": "PositionSnapshotV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "position_snapshot_id",
+    "as_of_time",
+    "portfolio_node_id",
+    "positions"
+  ],
+  "properties": {
+    "position_snapshot_id": {
+      "type": "string"
+    },
+    "as_of_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "portfolio_node_id": {
+      "type": "string"
+    },
+    "positions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "position_id",
+          "instrument_id",
+          "product_type",
+          "quantity"
+        ],
+        "properties": {
+          "position_id": {
+            "type": "string"
+          },
+          "instrument_id": {
+            "type": "string"
+          },
+          "product_type": {
+            "type": "string",
+            "enum": [
+              "FX_FWD",
+              "AMORT_LOAN",
+              "FIXED_BOND"
+            ]
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "attributes": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

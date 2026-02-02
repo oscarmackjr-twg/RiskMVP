@@ -1,0 +1,300 @@
+# scripts/excel_to_position_snapshot.py
+#
+# Convert a seller Excel loan tape into a PositionSnapshot JSON payload
+# compatible with run-orchestrator: POST /api/v1/positions/snapshot
+#
+# Usage (PowerShell):
+#   python scripts/excel_to_position_snapshot.py `
+#     --input inputs/loans.xlsx `
+#     --sheet 0 `
+#     --portfolio-node-id BOOK-PRIME-LOANS `
+#     --as-of 2026-01-23T00:00:00Z `
+#     --output outputs/positions_snapshot.json
+#
+# Notes:
+# - MVP assumptions: USD base currency, simple accrual, contractual amortization only.
+# - For NINP rows where "coupon" is not reliable, we fall back to APR/100.
+# - We generate a short cashflow stub (default 6 payments) for deterministic pricing.
+#
+from __future__ import annotations
+
+import argparse
+import json
+from dataclasses import dataclass
+from datetime import datetime, date
+from typing import Any, Dict, List, Optional, Tuple
+
+import pandas as pd
+
+
+# ------------------------- helpers -------------------------
+
+def parse_iso_dt(s: str) -> datetime:
+    # Accept Z or offset; fallback to date-only
+    s = str(s).strip()
+    if s.endswith("Z"):
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    try:
+        return datetime.fromisoformat(s)
+    except ValueError:
+        # date-only
+        return datetime.fromisoformat(s + "T00:00:00+00:00")
+
+
+def parse_excel_date(v: Any) -> Optional[date]:
+    if v is None or (isinstance(v, float) and pd.isna(v)) or (isinstance(v, str) and v.strip() == ""):
+        return None
+    ts = pd.to_datetime(v, errors="coerce")
+    if pd.isna(ts):
+        return None
+    return ts.date()
+
+
+def safe_float(v: Any, default: float = 0.0) -> float:
+    try:
+        if v is None or (isinstance(v, float) and pd.isna(v)):
+            return default
+        return float(v)
+    except Exception:
+        return default
+
+
+def safe_str(v: Any, default: str = "") -> str:
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return default
+    return str(v)
+
+
+def add_months(d: date, n: int) -> date:
+    # simple month increment (keeps day if possible; clips to month end)
+    y = d.year + (d.month - 1 + n) // 12
+    m = (d.month - 1 + n) % 12 + 1
+    # day clipping
+    import calendar
+    last = calendar.monthrange(y, m)[1]
+    day = min(d.day, last)
+    return date(y, m, day)
+
+
+def coupon_rate_from_row(row: pd.Series) -> float:
+    """
+    Prefer 'coupon' if it looks like a decimal rate (0 < x < 1).
+    Otherwise fall back to APR/100.
+    """
+    coupon = safe_float(row.get("coupon"), default=float("nan"))
+    apr = safe_float(row.get("APR"), default=float("nan"))
+
+    if 0.0 < coupon < 1.0:
+        return coupon
+
+    if apr > 0:
+        return apr / 100.0
+
+    return 0.0
+
+
+def infer_product_type(row: pd.Series) -> str:
+    # MVP: everything in this tape is treated as amortizing consumer loan
+    return "AMORT_LOAN"
+
+
+def infer_term_months(row: pd.Series) -> int:
+    # Prefer loan_term if present, else Term
+    lt = safe_float(row.get("loan_term"), default=float("nan"))
+    if lt and lt == lt:  # not NaN
+        return int(round(lt))
+    t = safe_float(row.get("Term"), default=float("nan"))
+    return int(round(t)) if t and t == t else 0
+
+
+def infer_next_payment_date(row: pd.Series, as_of_date: date) -> date:
+    """
+    Use 'Monthly Payment Date' if present. If missing, assume one month after as_of_date.
+    """
+    mpd = parse_excel_date(row.get("Monthly Payment Date"))
+    if mpd:
+        return mpd
+    return add_months(as_of_date, 1)
+
+
+def infer_last_payment_date(next_payment: date) -> date:
+    # assume monthly cadence
+    return add_months(next_payment, -1)
+
+
+def gen_cashflows(
+    principal: float,
+    coupon_rate: float,
+    monthly_payment: float,
+    first_pay_date: date,
+    count: int = 6
+) -> List[Dict[str, Any]]:
+    """
+    Generate a short contractual cashflow stub:
+      interest = bal * coupon/12
+      principal = payment - interest
+    """
+    flows: List[Dict[str, Any]] = []
+    bal = principal
+
+    for i in range(count):
+        pay_date = add_months(first_pay_date, i)
+        interest = bal * coupon_rate / 12.0
+        principal_pay = monthly_payment - interest
+
+        # guard: if payment too small, principal doesn't amortize
+        if principal_pay < 0:
+            principal_pay = 0.0
+
+        flows.append(
+            {
+                "pay_date": pay_date.isoformat(),
+                "interest": float(interest),
+                "principal": float(principal_pay),
+            }
+        )
+        bal = max(0.0, bal - principal_pay)
+
+    return flows
+
+
+def make_position_and_instrument(
+    row: pd.Series,
+    as_of_dt: datetime,
+    portfolio_node_id: str,
+    cashflow_count: int,
+) -> Dict[str, Any]:
+    loan_id = safe_str(row.get("SELLER Loan #") or row.get("SELLER Loan #".upper()) or row.get("SELLER Loan #".lower()))
+    if not loan_id:
+        # some tapes use different naming
+        loan_id = safe_str(row.get("SELLER Loan #", ""))
+
+    product_type = infer_product_type(row)
+    term_months = infer_term_months(row)
+
+    current_principal = safe_float(row.get("Current Balance"), default=0.0)
+    monthly_payment = safe_float(row.get("Monthly Payment"), default=0.0)
+    fico = safe_float(row.get("FICO Borrower"), default=float("nan"))
+    platform = safe_str(row.get("Platform"), default="")
+
+    coupon = coupon_rate_from_row(row)
+
+    as_of_date = as_of_dt.date()
+    next_payment_date = infer_next_payment_date(row, as_of_date)
+    last_payment_date = infer_last_payment_date(next_payment_date)
+
+    cashflows = gen_cashflows(
+        principal=current_principal,
+        coupon_rate=coupon,
+        monthly_payment=monthly_payment,
+        first_pay_date=next_payment_date,
+        count=cashflow_count,
+    )
+
+    # Instrument embedded (MVP convenience)
+    instrument = {
+        "instrument_type": product_type,
+        "terms": {
+            "currency": "USD",
+            "day_count": "30/360",
+            "payment_frequency": "MONTHLY",
+            "original_term_months": term_months,
+            "coupon_rate": coupon,
+        },
+        "risk_modeling": {
+            "discount_curve": "USD-OIS",
+            "spread_curve": "LOAN-SPREAD",
+        },
+        "governance": {
+            "source": "SELLER_FEED",
+            "asset_type": safe_str(row.get("Asset Type"), default=""),
+            "platform": platform,
+        },
+    }
+
+    position = {
+        "position_id": f"POS-{loan_id}",
+        "instrument_id": loan_id,
+        "product_type": product_type,
+        "quantity": 1.0,
+        "attributes": {
+            "as_of_date": as_of_date.isoformat(),
+            "portfolio_node_id": portfolio_node_id,
+            "current_principal": current_principal,
+            "coupon_rate": coupon,
+            "monthly_payment": monthly_payment,
+            "last_payment_date": last_payment_date.isoformat(),
+            "platform": platform,
+            "fico": None if (isinstance(fico, float) and pd.isna(fico)) else int(fico),
+            "state": safe_str(row.get("State") or row.get("Property State"), default=""),
+            "city": safe_str(row.get("Property City"), default=""),
+            "loan_program": safe_str(row.get("loan program") or row.get("loan program".upper()), default=""),
+            "term_months": term_months,
+            "instrument": instrument,
+            "cashflows": cashflows,
+        },
+    }
+
+    return position
+
+
+# ------------------------- main -------------------------
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--input", required=True, help="Path to .xlsx")
+    ap.add_argument("--sheet", default="0", help="Sheet name or index (default 0)")
+    ap.add_argument("--portfolio-node-id", required=True)
+    ap.add_argument("--as-of", required=True, help="ISO datetime, e.g. 2026-01-23T00:00:00Z")
+    ap.add_argument("--output", required=True, help="Output JSON path")
+    ap.add_argument("--cashflows", type=int, default=6, help="Number of future cashflows to generate (default 6)")
+    ap.add_argument("--filter-platform", default=None, help="Optional: only include rows where Platform equals this")
+    ap.add_argument("--max-rows", type=int, default=0, help="Optional cap (0 = no cap)")
+    args = ap.parse_args()
+
+    as_of_dt = parse_iso_dt(args.as_of)
+
+    # sheet can be int-like
+    sheet: Any = args.sheet
+    if isinstance(sheet, str) and sheet.isdigit():
+        sheet = int(sheet)
+
+    df = pd.read_excel(args.input, sheet_name=sheet)
+
+    # Normalize column names (strip)
+    df.columns = [str(c).strip() for c in df.columns]
+
+    if args.filter_platform:
+        df = df[df["Platform"].astype(str).str.upper() == args.filter_platform.upper()]
+
+    if args.max_rows and args.max_rows > 0:
+        df = df.head(args.max_rows)
+
+    positions: List[Dict[str, Any]] = []
+    for _, row in df.iterrows():
+        loan_id = safe_str(row.get("SELLER Loan #"))
+        if not loan_id:
+            continue
+        positions.append(
+            make_position_and_instrument(
+                row=row,
+                as_of_dt=as_of_dt,
+                portfolio_node_id=args.portfolio_node_id,
+                cashflow_count=args.cashflows,
+            )
+        )
+
+    snapshot = {
+        "as_of_time": as_of_dt.isoformat().replace("+00:00", "Z"),
+        "portfolio_node_id": args.portfolio_node_id,
+        "positions": positions,
+    }
+
+    with open(args.output, "w", encoding="utf-8") as f:
+        json.dump(snapshot, f, indent=2)
+
+    print(f"Wrote {len(positions)} positions -> {args.output}")
+
+
+if __name__ == "__main__":
+    main()

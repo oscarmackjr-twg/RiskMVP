@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/domains/marketdata.snapshot.v1.json",
+  "title": "MarketDataSnapshotV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot_id",
+    "as_of_time",
+    "vendor",
+    "universe_id",
+    "fx_spots",
+    "curves",
+    "quality"
+  ],
+  "properties": {
+    "snapshot_id": {
+      "type": "string"
+    },
+    "as_of_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "vendor": {
+      "type": "string"
+    },
+    "universe_id": {
+      "type": "string"
+    },
+    "fx_spots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pair",
+          "spot",
+          "ts"
+        ],
+        "properties": {
+          "pair": {
+            "type": "string"
+          },
+          "spot": {
+            "type": "number"
+          },
+          "ts": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "curves": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "curve_id",
+          "curve_type",
+          "nodes"
+        ],
+        "properties": {
+          "curve_id": {
+            "type": "string",
+            "enum": [
+              "USD-OIS",
+              "LOAN-SPREAD",
+              "FI-SPREAD",
+              "EUR-OIS"
+            ]
+          },
+          "curve_type": {
+            "type": "string",
+            "enum": [
+              "DISCOUNT",
+              "SPREAD"
+            ]
+          },
+          "nodes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "tenor",
+                "zero_rate"
+              ],
+              "properties": {
+                "tenor": {
+                  "type": "string"
+                },
+                "zero_rate": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dq_status",
+        "issues"
+      ],
+      "properties": {
+        "dq_status": {
+          "type": "string",
+          "enum": [
+            "PASS",
+            "WARN",
+            "FAIL"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

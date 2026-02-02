@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/domains/run.completed.v1.json",
+  "title": "RunCompletedV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "run_id",
+    "status",
+    "completed_at",
+    "summary"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "COMPLETED",
+        "FAILED",
+        "CANCELLED"
+      ]
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "summary": {
+      "type": "object"
+    },
+    "error": {
+      "type": "object"
+    }
+  }
+}

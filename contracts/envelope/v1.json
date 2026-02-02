@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contracts/envelope/v1.json",
+  "title": "EventEnvelopeV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "event_type",
+    "event_time",
+    "tenant_id",
+    "correlation_id",
+    "producer",
+    "payload",
+    "lineage"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^1\\.0$"
+    },
+    "event_id": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string"
+    },
+    "event_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "correlation_id": {
+      "type": "string"
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system",
+        "instance"
+      ],
+      "properties": {
+        "system": {
+          "type": "string"
+        },
+        "instance": {
+          "type": "string"
+        }
+      }
+    },
+    "payload": {
+      "type": "object"
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_system",
+        "source_record_id",
+        "ingest_time",
+        "payload_hash"
+      ],
+      "properties": {
+        "source_system": {
+          "type": "string"
+        },
+        "source_record_id": {
+          "type": "string"
+        },
+        "ingest_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload_hash": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
