@@ -2,7 +2,7 @@
 
 **Project:** IPRS Institutional Portfolio Risk & Analytics System
 **Created:** 2026-02-11
-**Last Updated:** 2026-02-11T21:04:08Z
+**Last Updated:** 2026-02-11T22:05:40Z
 
 ---
 
@@ -20,17 +20,17 @@
 
 | Metric | Status |
 |--------|--------|
-| **Active Phase** | Phase 2: Core Compute Engines (COMPLETE ✓) |
-| **Current Plan** | 02-09 COMPLETE ✓ — All plans complete (01, 02, 03, 04, 05, 06, 07, 08, 09-gap-closure) |
-| **Overall Progress** | 100% Phase 2 (Phase 1 complete + 9/9 Phase 2 plans including gap closure) |
+| **Active Phase** | Phase 3: Portfolio & Data Services (IN PROGRESS) |
+| **Current Plan** | 03-01 COMPLETE ✓ — Database schema extension |
+| **Overall Progress** | Phase 3: 1/9 plans (Phase 1 complete, Phase 2 complete) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [########] Core Compute [########] Portfolio [........] Regulatory [........]
-    100%                    100%                     0%                  0%
+Foundation [########] Core Compute [########] Portfolio [#.......] Regulatory [........]
+    100%                    100%                    ~11%                  0%
 ```
 
 ---
@@ -72,6 +72,7 @@ Foundation [########] Core Compute [########] Portfolio [........] Regulatory [.
 | Phase 02 P07 | 441 | 4 tasks | 6 files |
 | Phase 02 P08 | 737 | 4 tasks | 9 files |
 | Phase 02 P09 | 296 | 3 tasks | 4 files |
+| Phase 03 P01 | 304 | 3 tasks | 4 files |
 
 ### Execution Readiness
 
@@ -121,6 +122,10 @@ Foundation [########] Core Compute [########] Portfolio [........] Regulatory [.
 | Euler discretization for Monte Carlo | Use Euler scheme instead of QuantLib GaussianPathGenerator due to API complexity; simpler and extensible to other models | Phase 2 Plan 08 |
 | ES >= VaR coherence validation | Validate Expected Shortfall coherent risk measure property in all tests; regulatory requirement (Basel III) | Phase 2 Plan 08 |
 | Scenario application for structured pricer | Added _apply_scenario function to structured product pricer to handle PARALLEL_SHIFT scenarios; matches pattern from putable_bond pricer | Phase 2 Plan 09 |
+| No connection pooling for Phase 3 MVP | psycopg3 sync connection-per-request sufficient for <10K positions and <100 concurrent requests; can add psycopg_pool if load testing shows need | Phase 3 Plan 01 |
+| Content-addressable portfolio snapshots | Use SHA-256 payload_hash with UNIQUE constraint for automatic snapshot deduplication | Phase 3 Plan 01 |
+| PostgreSQL recursive CTEs for portfolio hierarchy | Use native recursive WITH queries instead of Python loops; DB-optimized tree traversal | Phase 3 Plan 01 |
+| JSONB for flexible metadata | Store tags_json, metadata_json in JSONB to support evolving attributes without schema changes | Phase 3 Plan 01 |
 
 ### Architectural Constraints
 
@@ -159,60 +164,50 @@ Foundation [########] Core Compute [########] Portfolio [........] Regulatory [.
 
 ### What Was Done in This Session
 
-**Phase 02 Plan 09: Gap Closure - Golden Tests**
+**Phase 03 Plan 01: Database Schema Extension**
 
-1. **Putable bond credit spread test** - Added test_putable_bond_credit_spread to verify +25bp credit spread shock scenario
-2. **Derivatives DV01 sensitivity test** - Added test_swap_dv01_sensitivity to verify DV01 calculation and rate sensitivity
-3. **Structured scenarios test** - Added test_structured_scenarios to verify pricing across RATES_UP and RATES_DOWN scenarios
-4. **Scenario application fix** - Added _apply_scenario function to structured product pricer (deviation fix)
-5. **Golden test coverage** - 26 total golden tests (was 23), all pricers now have >=3 tests
+1. **Created Phase 3 schema** - 9 tables for portfolio, reference data, and data ingestion domains
+2. **Added indexes** - 13 indexes for hierarchy, temporal, and join query performance
+3. **Documented connection strategy** - Connection pooling guidance in db.py for Phase 3 load
+4. **Created verification tools** - SQL and Python scripts for automated schema validation
+
+**Schema tables:**
+- Portfolio: portfolio_node, position, portfolio_snapshot
+- Reference: reference_data, rating_history, fx_spot
+- Ingestion: market_data_feed, data_lineage, ingestion_batch
 
 **Commits:**
-- 68b2eee: test(02-09): add credit spread test to putable bond golden tests
-- ad48bb8: test(02-09): add DV01 sensitivity test to derivatives golden tests
-- 6651c0a: test(02-09): add multiple scenarios test to structured product golden tests
+- e516f9d: feat(03-01): add Phase 3 database schema extension
+- ddc7b40: chore(03-01): document connection pooling strategy in db.py
+- a69bf3b: chore(03-01): add Phase 3 schema verification tools
 
-**Duration:** 296 seconds (4 min 56 sec)
+**Duration:** 304 seconds (5 min 4 sec)
 
 ---
 
-**Phase 2 COMPLETE!** All 9 plans executed (8 main + 1 gap closure). All risk and scenario requirements delivered. Golden test coverage complete (>=3 tests per pricer).
-- Credit risk: PD curves, EL/UL formulas
-- Market risk: VaR, Expected Shortfall, duration, DV01, convexity
-- Liquidity risk: Bid/ask spread, time-to-liquidate, LCR
-- Monte Carlo: Hull-White, Vasicek, CIR path generation
-- Scenario management: Stress testing, what-if analysis
-- Golden tests: 26 tests covering all 9 pricers
+**Phase 3 STARTED!** Database foundation complete. All tables, indexes, and constraints defined. Schema ready to apply when database available.
 
 ### Next Session Starting Point
 
-**Phase 2 COMPLETE!** All 9 plans executed. Ready for Phase 3 (Portfolio & Data Services).
+**Phase 3 Plan 01 COMPLETE!** Database schema extension ready.
 
-**Phase 2 Deliverables:**
-- 9 pricers: FX_FWD, AMORT_LOAN, FIXED_BOND, CALLABLE_BOND, PUTABLE_BOND, FLOATING_RATE_BOND, INTEREST_RATE_SWAP, ABS_MBS, STRUCTURED_NOTE
-- QuantLib curve construction (discount, forward, basis)
-- Cashflow generation engine
-- Market risk analytics (duration, DV01, convexity)
-- Credit risk analytics (PD model, EL/UL)
-- VaR and Expected Shortfall
-- Monte Carlo simulation (Hull-White, Vasicek, CIR)
-- Liquidity risk metrics
-- Scenario management service
-- 26 golden tests (>=3 per pricer)
+**Next:** Phase 3 Plan 02 (Portfolio Service implementation)
 
 **Files to reference:**
-- `.planning/phases/02-core-compute-engines/02-09-SUMMARY.md` — Gap closure golden tests summary
-- `.planning/phases/02-core-compute-engines/02-08-SUMMARY.md` — Risk and scenario analytics summary
-- All Phase 2 summaries (02-01 through 02-09)
-- `compute/pricers/` — All 9 pricer implementations
-- `compute/risk/` — Credit, market, and liquidity risk modules
-- `compute/quantlib/` — Curve construction and Monte Carlo
-- `compute/tests/golden/` — 26 golden tests
+- `.planning/phases/03-portfolio-data-services/03-01-SUMMARY.md` — Schema extension summary
+- `sql/002_portfolio_data_services.sql` — Phase 3 schema (9 tables, 13 indexes)
+- `sql/apply_and_verify_002.py` — Automated verification script
+- `services/common/db.py` — Connection pattern with pooling guidance
+
+**To apply schema:**
+```bash
+python sql/apply_and_verify_002.py
+```
 
 **Git status:**
 - Main branch active
-- Phase 2 complete: 9 plans, 35 tasks, 54+ files created
-- Ready to begin Phase 3: Portfolio & Data Services
+- Phase 3 started: 1/9 plans complete
+- Ready to build Portfolio Service (Plan 02)
 
 ---
 
