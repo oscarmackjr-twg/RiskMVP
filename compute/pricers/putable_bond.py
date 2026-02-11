@@ -1,17 +1,19 @@
-"""Callable bond pricer using QuantLib tree-based valuation.
+"""Putable bond pricer using QuantLib tree-based valuation.
 
-Implements institutional-grade callable bond pricing with:
+Implements institutional-grade putable bond pricing with:
 - Hull-White short rate model for option valuation
-- TreeCallableFixedRateBondEngine for embedded call options
-- OAS (Option-Adjusted Spread) calculation via Brent solver
-- YTC (Yield-to-Call) from optimal call date
+- TreeCallableFixedRateBondEngine for embedded put options
+- YTP (Yield-to-Put) from optimal put exercise date
+
+Put bonds use the same engine as callable bonds but with Callability.Put type.
+The put option provides downside protection for investors (right to sell back at par).
 
 Hull-White model parameters:
 - a = 0.03 (mean reversion speed)
 - sigma = 0.12 (volatility)
 
 NOTE: These are market-standard USD parameters. Production implementation
-should calibrate to swaption volatility surface. See research open question 1.
+should calibrate to swaption volatility surface.
 """
 from __future__ import annotations
 
@@ -25,28 +27,27 @@ from compute.quantlib.curve_builder import build_discount_curve
 from compute.quantlib.day_count import get_day_counter
 
 
-def price_callable_bond(
+def price_putable_bond(
     position: dict,
     instrument: dict,
     market_snapshot: dict,
     measures: List[str],
     scenario_id: str,
 ) -> Dict[str, float]:
-    """Price a callable bond with embedded call option.
+    """Price a putable bond with embedded put option.
 
     Args:
         position: Position dict with position_id, quantity, attributes.
                   attributes.as_of_date: Valuation date (YYYY-MM-DD).
-                  market_price (optional): For OAS calculation.
         instrument: Instrument dict with:
                     - issue_date: Bond issue date (YYYY-MM-DD)
                     - maturity_date: Bond maturity (YYYY-MM-DD)
                     - coupon_rate: Annual coupon rate (decimal)
                     - frequency: Coupon frequency ('ANNUAL', 'SEMIANNUAL', 'QUARTERLY')
                     - day_count: Day count convention ('ACT/ACT', 'ACT/360', '30/360')
-                    - call_schedule: List of {call_date, call_price, call_type}
+                    - put_schedule: List of {put_date, put_price, put_type}
         market_snapshot: Market data with calc_date and curves.
-        measures: List of measures to compute ('PV', 'CLEAN_PRICE', 'OAS', 'YTC').
+        measures: List of measures to compute ('PV', 'CLEAN_PRICE', 'YTP').
         scenario_id: Scenario identifier ('BASE', 'RATES_PARALLEL_100BP', etc.).
 
     Returns:
@@ -73,10 +74,10 @@ def price_callable_bond(
     coupon_rate = float(instrument["coupon_rate"])
     frequency_str = instrument.get("frequency", "SEMIANNUAL")
     day_count_str = instrument.get("day_count", "ACT/ACT")
-    call_schedule_data = instrument.get("call_schedule", [])
+    put_schedule_data = instrument.get("put_schedule", [])
 
-    if not call_schedule_data:
-        raise ValueError("Callable bond must have call_schedule")
+    if not put_schedule_data:
+        raise ValueError("Putable bond must have put_schedule")
 
     # Build discount curve
     curve_data = {
@@ -114,22 +115,23 @@ def price_callable_bond(
         False  # end of month
     )
 
-    # Build call schedule
-    call_schedule = ql.CallabilitySchedule()
-    for call_entry in call_schedule_data:
-        call_date = _parse_date(call_entry["call_date"])
-        call_price = float(call_entry["call_price"])
-        # Call price is expressed as percentage of par (e.g., 100.0 = par)
-        bond_price = ql.BondPrice(call_price, ql.BondPrice.Clean)
-        callability = ql.Callability(bond_price, ql.Callability.Call, call_date)
-        call_schedule.append(callability)
+    # Build put schedule (using Callability.Put instead of Callability.Call)
+    put_schedule = ql.CallabilitySchedule()
+    for put_entry in put_schedule_data:
+        put_date = _parse_date(put_entry["put_date"])
+        put_price = float(put_entry["put_price"])
+        # Put price is expressed as percentage of par (e.g., 100.0 = par)
+        bond_price = ql.BondPrice(put_price, ql.BondPrice.Clean)
+        # Use Callability.Put for putable bonds
+        callability = ql.Callability(bond_price, ql.Callability.Put, put_date)
+        put_schedule.append(callability)
 
-    # Create callable bond
+    # Create callable bond (QuantLib uses same class for both callable and putable)
     settlement_days = 2
     face_amount = 100.0
     coupons = [coupon_rate]
 
-    callable_bond = ql.CallableFixedRateBond(
+    putable_bond = ql.CallableFixedRateBond(
         settlement_days,
         face_amount,
         schedule,
@@ -138,7 +140,7 @@ def price_callable_bond(
         ql.ModifiedFollowing,
         face_amount,  # redemption
         issue_date,
-        call_schedule
+        put_schedule
     )
 
     # Create Hull-White model
@@ -150,7 +152,7 @@ def price_callable_bond(
     # Set tree-based pricing engine
     grid_points = 40  # Tree grid points (higher = more accurate but slower)
     engine = ql.TreeCallableFixedRateBondEngine(hw_model, grid_points)
-    callable_bond.setPricingEngine(engine)
+    putable_bond.setPricingEngine(engine)
 
     # Compute measures
     result: Dict[str, float] = {}
@@ -159,41 +161,25 @@ def price_callable_bond(
         # NPV returns dirty price (includes accrued interest)
         # Scale by quantity and face amount
         quantity = float(position.get("quantity", 1.0))
-        npv = callable_bond.NPV()
+        npv = putable_bond.NPV()
         # NPV is per 100 face value, scale to position quantity
         result["PV"] = npv * quantity / 100.0
 
     if "CLEAN_PRICE" in measures:
-        result["CLEAN_PRICE"] = callable_bond.cleanPrice()
+        result["CLEAN_PRICE"] = putable_bond.cleanPrice()
 
-    if "OAS" in measures:
-        # OAS calculation requires market price
-        market_price = position.get("market_price")
-        if market_price is None:
-            raise ValueError("OAS calculation requires position.market_price")
-
-        # Use Brent solver to find OAS that matches market price
-        oas = _calculate_oas(
-            callable_bond,
-            float(market_price),
-            discount_curve,
-            hw_model,
-            grid_points
-        )
-        result["OAS"] = oas
-
-    if "YTC" in measures:
-        # Yield-to-Call: compute yield to earliest call date
-        # Use first call date from schedule
-        if call_schedule_data:
+    if "YTP" in measures:
+        # Yield-to-Put: compute yield to earliest put date
+        # Use first put date from schedule
+        if put_schedule_data:
             # Compute yield using QuantLib bond yield calculation
             # Call bondYield() without arguments to get current yield based on market price
-            ytc = callable_bond.bondYield(
+            ytp = putable_bond.bondYield(
                 day_count,
                 ql.Compounded,
                 frequency
             )
-            result["YTC"] = ytc
+            result["YTP"] = ytp
 
     return result
 
@@ -250,73 +236,6 @@ def _apply_scenario(market_snapshot: dict, scenario_id: str) -> dict:
         return snapshot
 
     raise ValueError(f"Unsupported scenario_id: {scenario_id}")
-
-
-def _calculate_oas(
-    callable_bond: ql.CallableFixedRateBond,
-    market_price: float,
-    discount_curve: ql.YieldTermStructure,
-    hw_model: ql.HullWhite,
-    grid_points: int,
-) -> float:
-    """Calculate Option-Adjusted Spread using Brent solver.
-
-    OAS is the constant spread added to the discount curve such that the
-    model price matches the market price.
-
-    Args:
-        callable_bond: QuantLib callable bond.
-        market_price: Market clean price.
-        discount_curve: Discount curve.
-        hw_model: Hull-White model.
-        grid_points: Tree grid points.
-
-    Returns:
-        OAS in decimal (e.g., 0.015 = 150 bps).
-    """
-    def price_with_spread(spread: float) -> float:
-        """Compute bond price with given spread."""
-        # Create spreaded curve
-        spread_handle = ql.QuoteHandle(ql.SimpleQuote(spread))
-        spreaded_curve = ql.ZeroSpreadedTermStructure(
-            ql.YieldTermStructureHandle(discount_curve),
-            spread_handle
-        )
-        spreaded_curve.enableExtrapolation()
-
-        # Rebuild Hull-White model with spreaded curve
-        hw_spreaded = ql.HullWhite(
-            ql.YieldTermStructureHandle(spreaded_curve),
-            hw_model.params()[0],  # a
-            hw_model.params()[1]   # sigma
-        )
-
-        # Set new engine
-        engine = ql.TreeCallableFixedRateBondEngine(hw_spreaded, grid_points)
-        callable_bond.setPricingEngine(engine)
-
-        return callable_bond.cleanPrice()
-
-    # Use Brent solver to find spread
-    # OAS typically in range [0, 500 bps] for investment-grade bonds
-    solver = ql.Brent()
-    tolerance = 1e-6
-    max_evaluations = 100
-
-    try:
-        oas = solver.solve(
-            lambda spread: price_with_spread(spread) - market_price,
-            tolerance,
-            0.02,  # initial guess: 200 bps
-            0.0,   # min: 0 bps
-            0.05   # max: 500 bps
-        )
-    except RuntimeError as e:
-        # If solver fails, return a reasonable default
-        # (e.g., typical corporate OAS)
-        oas = 0.015  # 150 bps
-
-    return oas
 
 
 def _parse_date(date_str: str) -> ql.Date:
