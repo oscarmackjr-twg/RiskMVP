@@ -1,14 +1,11 @@
 
-from fastapi import FastAPI, HTTPException
+from fastapi import HTTPException
 from typing import Literal
 
 from services.common.db import db_conn
+from services.common.service_base import create_service_app
 
-app = FastAPI(title="results-api", version="0.1.0")
-
-@app.get("/health")
-def health():
-    return {"ok": True}
+app = create_service_app(title="results-api", version="0.1.0")
 
 @app.get("/api/v1/results/{runId}/summary")
 def summary(runId: str, scenario_id: str = "BASE"):

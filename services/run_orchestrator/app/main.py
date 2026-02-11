@@ -1,18 +1,68 @@
 import os, json, hashlib
 from psycopg.types.json import Json
 
-
-from fastapi import FastAPI, HTTPException
+from fastapi import HTTPException
 from pydantic import BaseModel, Field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional, Literal
+from uuid import uuid4
+from psycopg.rows import dict_row
 
 from services.common.db import db_conn
+from services.common.service_base import create_service_app
+
+# --- Position Snapshot API models ---
+
+class PositionSnapshotIn(BaseModel):
+    # Either supply as_of_time+portfolio_node_id here,
+    # or they can be inside payload_json; we'll prefer explicit fields.
+    as_of_time: Optional[datetime] = None
+    portfolio_node_id: Optional[str] = None
+
+    # The raw positions payload your demo uses
+    payload: Dict[str, Any] = Field(..., description="Positions snapshot payload JSON")
+
+class PositionSnapshotOut(BaseModel):
+    position_snapshot_id: str
+    as_of_time: datetime
+    portfolio_node_id: str
+    payload_hash: str
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+def _normalize_asof(dt: datetime) -> datetime:
+    # Ensure timezone-aware
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+def _extract_required_fields(payload: Dict[str, Any], explicit_asof: Optional[datetime], explicit_port: Optional[str]) -> tuple[datetime, str]:
+    # Prefer explicit fields, fallback to payload fields
+    as_of_time = explicit_asof or payload.get("as_of_time")
+    portfolio_node_id = explicit_port or payload.get("portfolio_node_id")
+
+    if not as_of_time:
+        raise HTTPException(status_code=400, detail="Missing as_of_time (provide in body or payload.as_of_time)")
+    if not portfolio_node_id:
+        raise HTTPException(status_code=400, detail="Missing portfolio_node_id (provide in body or payload.portfolio_node_id)")
+
+    # payload.as_of_time might be string; allow that
+    if isinstance(as_of_time, str):
+        # Accept both "2026-01-23T00:00:00Z" and full ISO
+        try:
+            as_of_time = datetime.fromisoformat(as_of_time.replace("Z", "+00:00"))
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Invalid as_of_time string: {as_of_time}")
+
+    return _normalize_asof(as_of_time), str(portfolio_node_id)
 
 
 def sha256_json(obj: Any) -> str:
     raw = json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return "sha256:" + hashlib.sha256(raw).hexdigest()
+
+
 
 def load_positions_payload() -> Dict[str, Any]:
     path = os.getenv("POSITIONS_SNAPSHOT_PATH", "demo/inputs/positions.json")
@@ -25,7 +75,8 @@ def load_positions_payload() -> Dict[str, Any]:
 
 
 
-app = FastAPI(title="run-orchestrator", version="0.1.0")
+
+app = create_service_app(title="run-orchestrator", version="0.1.0")
 
 class ScenarioSpec(BaseModel):
     scenario_set_id: str
@@ -42,9 +93,87 @@ class RunRequestedV1(BaseModel):
     measures: List[str]
     scenarios: List[ScenarioSpec] = Field(default_factory=lambda: [ScenarioSpec(scenario_set_id="BASE")])
 
-@app.get("/health")
-def health():
-    return {"ok": True}
+
+UPSERT_POSITION_SNAPSHOT_SQL = """
+INSERT INTO position_snapshot (
+  position_snapshot_id, as_of_time, portfolio_node_id, payload_json, payload_hash, created_at
+)
+VALUES (
+  %(position_snapshot_id)s,
+  %(as_of_time)s,
+  %(portfolio_node_id)s,
+  %(payload_json)s,
+  %(payload_hash)s,
+  now()
+)
+ON CONFLICT (position_snapshot_id)
+DO UPDATE SET
+  as_of_time = EXCLUDED.as_of_time,
+  portfolio_node_id = EXCLUDED.portfolio_node_id,
+  payload_json = EXCLUDED.payload_json,
+  payload_hash = EXCLUDED.payload_hash;
+"""
+
+GET_POSITION_SNAPSHOT_SQL = """
+SELECT position_snapshot_id, as_of_time, portfolio_node_id, payload_hash, payload_json
+FROM position_snapshot
+WHERE position_snapshot_id = %(psid)s;
+"""
+
+@app.post("/api/v1/position-snapshots", response_model=PositionSnapshotOut, status_code=201)
+def create_position_snapshot(req: PositionSnapshotIn):
+    payload = req.payload
+    as_of_time, portfolio_node_id = _extract_required_fields(payload, req.as_of_time, req.portfolio_node_id)
+
+    # Deterministic hash of payload JSON for idempotency checks
+    payload_hash = sha256_json(payload)
+
+    # Choose an id:
+    # - If caller provides payload.position_snapshot_id, use it
+    # - else generate one that is stable-ish for demos
+    psid = payload.get("position_snapshot_id")
+    if not psid:
+        # Friendly predictable id for demo runs; still unique enough
+        ts = as_of_time.strftime("%Y%m%d")
+        psid = f"PS-{portfolio_node_id}-{ts}-{uuid4().hex[:8]}"
+
+    try:
+        with db_conn() as conn:
+            conn.row_factory = dict_row
+            conn.execute(
+                UPSERT_POSITION_SNAPSHOT_SQL,
+                {
+                    "position_snapshot_id": psid,
+                    "as_of_time": as_of_time,
+                    "portfolio_node_id": portfolio_node_id,
+                    "payload_json": Json(payload),
+                    "payload_hash": payload_hash,
+                },
+            )
+            conn.commit()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB error writing position_snapshot: {repr(e)}")
+
+    return PositionSnapshotOut(
+        position_snapshot_id=psid,
+        as_of_time=as_of_time,
+        portfolio_node_id=portfolio_node_id,
+        payload_hash=payload_hash,
+    )
+
+@app.get("/api/v1/position-snapshots/{position_snapshot_id}")
+def get_position_snapshot(position_snapshot_id: str):
+    try:
+        with db_conn() as conn:
+            conn.row_factory = dict_row
+            row = conn.execute(GET_POSITION_SNAPSHOT_SQL, {"psid": position_snapshot_id}).fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Position snapshot not found")
+            return dict(row)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"DB error reading position_snapshot: {repr(e)}")
 
 
 UPSERT_POS_SNAPSHOT_SQL = """
@@ -81,12 +210,10 @@ class RunRequestedV1(BaseModel):
     as_of_time: datetime
     market_snapshot_id: str
     portfolio_scope: PortfolioScope
+    position_snapshot_id: Optional[str] = None
     measures: List[str]
     scenarios: List[ScenarioSpec] = Field(default_factory=lambda: [ScenarioSpec(scenario_set_id="BASE")])
 
-@app.get("/health")
-def health():
-    return {"ok": True}
 
 @app.post("/api/v1/runs", status_code=201)
 def create_run(req: RunRequestedV1):
@@ -102,7 +229,23 @@ def create_run(req: RunRequestedV1):
     """
 
     # 2) Load/prepare a position snapshot payload for this run
-    payload = load_positions_payload()
+    def _load_positions_by_id(psid: str) -> Dict[str, Any]:
+       with db_conn() as conn:
+        conn.row_factory = dict_row
+        row = conn.execute(
+            "SELECT payload_json FROM position_snapshot WHERE position_snapshot_id = %(psid)s",
+            {"psid": psid},
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=400, detail=f"position_snapshot_id not found: {psid}")
+        return row["payload_json"]
+
+        # inside create_run(...)
+        if getattr(req, "position_snapshot_id", None):
+            payload = _load_positions_by_id(req.position_snapshot_id)
+        else:
+        # fallback for legacy demo flow
+            payload = load_positions_payload()
 
     # Ensure payload has the expected shape the worker uses: payload["positions"]
     positions = payload.get("positions") or []

@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI, HTTPException
+from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import List, Literal
@@ -7,8 +7,9 @@ from psycopg.types.json import Json
 
 from services.common.db import db_conn
 from services.common.hash import sha256_json
+from services.common.service_base import create_service_app
 
-app = FastAPI(title="marketdata-svc", version="0.1.0")
+app = create_service_app(title="marketdata-svc", version="0.1.0")
 
 class CurveNode(BaseModel):
     tenor: str
@@ -36,10 +37,6 @@ class MarketDataSnapshotV1(BaseModel):
     fx_spots: List[FxSpot]
     curves: List[Curve]
     quality: Quality
-
-@app.get("/health")
-def health():
-    return {"ok": True}
 
 @app.post("/api/v1/marketdata/snapshots", status_code=201)
 def create_snapshot(snap: MarketDataSnapshotV1):

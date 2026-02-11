@@ -177,17 +177,10 @@ def price_position(
     measures: List[str],
     scenario_id: str,
 ) -> Dict[str, float]:
-    from compute.pricers.fx_fwd import price_fx_fwd
-    from compute.pricers.loan import price_loan
-    from compute.pricers.bond import price_bond
+    from compute.pricers.registry import get_pricer
 
-    if product_type == "FX_FWD":
-        return price_fx_fwd(position, instrument, market_snapshot, measures, scenario_id)
-    if product_type == "AMORT_LOAN":
-        return price_loan(position, instrument, market_snapshot, measures, scenario_id)
-    if product_type == "FIXED_BOND":
-        return price_bond(position, instrument, market_snapshot, measures, scenario_id)
-    raise ValueError(f"Unknown product_type: {product_type}")
+    pricer_fn = get_pricer(product_type)  # Raises ValueError if not registered
+    return pricer_fn(position, instrument, market_snapshot, measures, scenario_id)
 
 def worker_main() -> None:
     print(f"[worker] starting {WORKER_ID} dsn={DB_DSN}")
