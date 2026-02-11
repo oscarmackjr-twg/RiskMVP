@@ -2,7 +2,7 @@
 
 **Project:** IPRS Institutional Portfolio Risk & Analytics System
 **Created:** 2026-02-11
-**Last Updated:** 2026-02-11T20:12:36Z
+**Last Updated:** 2026-02-11T20:14:21Z
 
 ---
 
@@ -21,8 +21,8 @@
 | Metric | Status |
 |--------|--------|
 | **Active Phase** | Phase 2: Core Compute Engines (IN PROGRESS) |
-| **Current Plan** | 02-06 COMPLETE ✓ — Plan 02-02 next |
-| **Overall Progress** | 30% (Phase 1 complete + 2/8 Phase 2 plans, 8/49 requirements delivered) |
+| **Current Plan** | 02-05 COMPLETE ✓ — Plan 02-06 next |
+| **Overall Progress** | 33% (Phase 1 complete + 2/8 Phase 2 plans, 9/49 requirements delivered) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
@@ -64,6 +64,8 @@ Foundation [########] Core Compute [##......] Portfolio [........] Regulatory [.
 | Phase 01 P01 | 303 | 3 tasks | 7 files |
 | Phase 01 P02 | 130 | 2 tasks | 3 files |
 | Phase 01 P05 | 140 | 3 tasks | 3 files |
+| Phase 02 P01 | 282 | 3 tasks | 5 files |
+| Phase 02 P05 | 374 | 3 tasks | 6 files |
 | Phase 02 P06 | 330 | 3 tasks | 2 files |
 | Phase 02 P05 | 374 | 3 tasks | 6 files |
 
@@ -100,7 +102,13 @@ Foundation [########] Core Compute [##......] Portfolio [........] Regulatory [.
 | Multi-curve framework from start | Modern fixed income requires separate OIS discount and SOFR/LIBOR projection curves | Phase 2 Plan 01 |
 | Return QuantLib objects directly | No custom wrappers; downstream pricers use QuantLib YieldTermStructure natively | Phase 2 Plan 01 |
 | Factory pattern for day count/calendar | String-based factories (get_day_counter, get_calendar) provide convenient API over QuantLib | Phase 2 Plan 01 |
+| Vanilla swaps only (defer swaptions/caps/floors) | Start simple per research; swaptions and caps/floors deferred to future phase | Phase 2 Plan 05 |
+| Generic waterfall (not deal-specific) | Generic priority-of-payments handles simple CLO/CDO structures; complex deals require customization | Phase 2 Plan 05 |
+| Historical fixing via forward curve | QuantLib requires historical fixings for floating legs; use forward curve to derive fixing rate | Phase 2 Plan 05 |
+| Fallback simplified pricing for structured products | If collateral cashflows unavailable, prorate PV by subordination (graceful degradation) | Phase 2 Plan 05 |
 | QuantLib Schedule for date generation | Use QuantLib's battle-tested calendar logic; skip issue date in payment schedules | Phase 2 Plan 06 |
+| Fixed Hull-White parameters (a=0.03, sigma=0.12) | Market-standard USD parameters for callable/putable bonds; defer swaption vol calibration to future enhancement | Phase 2 Plan 02 |
+| Tree grid points=40 for embedded options | Balance accuracy and performance for callable/putable bond pricing; industry standard for tree-based valuation | Phase 2 Plan 02 |
 | Filter future cashflows at generation | pay_date > as_of_date filtering enables mid-life valuation and partial periods | Phase 2 Plan 06 |
 
 ### Architectural Constraints
