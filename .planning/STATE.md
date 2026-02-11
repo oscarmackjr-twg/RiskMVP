@@ -2,7 +2,7 @@
 
 **Project:** IPRS Institutional Portfolio Risk & Analytics System
 **Created:** 2026-02-11
-**Last Updated:** 2026-02-11T20:33:12Z
+**Last Updated:** 2026-02-11T21:04:08Z
 
 ---
 
@@ -20,9 +20,9 @@
 
 | Metric | Status |
 |--------|--------|
-| **Active Phase** | Phase 2: Core Compute Engines (IN PROGRESS) |
-| **Current Plan** | 02-08 COMPLETE ✓ — Multiple plans complete (01, 02, 03, 04, 05, 06, 07, 08) |
-| **Overall Progress** | 88% (Phase 1 complete + 8/8 Phase 2 plans, Phase 2 COMPLETE) |
+| **Active Phase** | Phase 2: Core Compute Engines (COMPLETE ✓) |
+| **Current Plan** | 02-09 COMPLETE ✓ — All plans complete (01, 02, 03, 04, 05, 06, 07, 08, 09-gap-closure) |
+| **Overall Progress** | 100% Phase 2 (Phase 1 complete + 9/9 Phase 2 plans including gap closure) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
@@ -71,6 +71,7 @@ Foundation [########] Core Compute [########] Portfolio [........] Regulatory [.
 | Phase 02 P03 | 630 | 4 tasks | 4 files |
 | Phase 02 P07 | 441 | 4 tasks | 6 files |
 | Phase 02 P08 | 737 | 4 tasks | 9 files |
+| Phase 02 P09 | 296 | 3 tasks | 4 files |
 
 ### Execution Readiness
 
@@ -119,6 +120,7 @@ Foundation [########] Core Compute [########] Portfolio [........] Regulatory [.
 | Historical PD lookup table from Moody's data | Use Moody's/S&P cumulative default rates instead of econometric models (Merton, CreditMetrics); lookup table sufficient for Phase 2 | Phase 2 Plan 08 |
 | Euler discretization for Monte Carlo | Use Euler scheme instead of QuantLib GaussianPathGenerator due to API complexity; simpler and extensible to other models | Phase 2 Plan 08 |
 | ES >= VaR coherence validation | Validate Expected Shortfall coherent risk measure property in all tests; regulatory requirement (Basel III) | Phase 2 Plan 08 |
+| Scenario application for structured pricer | Added _apply_scenario function to structured product pricer to handle PARALLEL_SHIFT scenarios; matches pattern from putable_bond pricer | Phase 2 Plan 09 |
 
 ### Architectural Constraints
 
@@ -157,36 +159,34 @@ Foundation [########] Core Compute [########] Portfolio [........] Regulatory [.
 
 ### What Was Done in This Session
 
-**Phase 02 Plan 08: Risk and Scenario Analytics**
+**Phase 02 Plan 09: Gap Closure - Golden Tests**
 
-1. **Credit risk analytics** - PD curves from ratings (AAA-CCC), expected loss (EL = PD × LGD × EAD), unexpected loss
-2. **VaR calculations** - Historical VaR from empirical distribution, parametric VaR with normal distribution assumption
-3. **Expected Shortfall** - CVaR tail risk measure with ES ≥ VaR coherence validation
-4. **Monte Carlo simulation** - Interest rate path generation using Hull-White, Vasicek, and CIR models
-5. **Liquidity metrics** - Bid/ask spread, time-to-liquidate, Basel III LCR
-6. **Scenario management** - ScenarioService with CRUD operations for stress testing
-7. **Comprehensive tests** - 11 tests passing (5 credit risk, 6 VaR/ES)
+1. **Putable bond credit spread test** - Added test_putable_bond_credit_spread to verify +25bp credit spread shock scenario
+2. **Derivatives DV01 sensitivity test** - Added test_swap_dv01_sensitivity to verify DV01 calculation and rate sensitivity
+3. **Structured scenarios test** - Added test_structured_scenarios to verify pricing across RATES_UP and RATES_DOWN scenarios
+4. **Scenario application fix** - Added _apply_scenario function to structured product pricer (deviation fix)
+5. **Golden test coverage** - 26 total golden tests (was 23), all pricers now have >=3 tests
 
 **Commits:**
-- 7664484: feat(02-08): implement credit risk analytics (PD model and expected loss)
-- 8b3c621: feat(02-08): implement VaR and Expected Shortfall
-- 35964de: feat(02-08): implement Monte Carlo path generation and liquidity metrics
-- 6febd53: feat(02-08): implement scenario management service and comprehensive tests
+- 68b2eee: test(02-09): add credit spread test to putable bond golden tests
+- ad48bb8: test(02-09): add DV01 sensitivity test to derivatives golden tests
+- 6651c0a: test(02-09): add multiple scenarios test to structured product golden tests
 
-**Duration:** 737 seconds (12 min 17 sec)
+**Duration:** 296 seconds (4 min 56 sec)
 
 ---
 
-**Phase 2 COMPLETE!** All 8 plans executed. All risk and scenario requirements delivered.
+**Phase 2 COMPLETE!** All 9 plans executed (8 main + 1 gap closure). All risk and scenario requirements delivered. Golden test coverage complete (>=3 tests per pricer).
 - Credit risk: PD curves, EL/UL formulas
 - Market risk: VaR, Expected Shortfall, duration, DV01, convexity
 - Liquidity risk: Bid/ask spread, time-to-liquidate, LCR
 - Monte Carlo: Hull-White, Vasicek, CIR path generation
 - Scenario management: Stress testing, what-if analysis
+- Golden tests: 26 tests covering all 9 pricers
 
 ### Next Session Starting Point
 
-**Phase 2 COMPLETE!** All 8 plans executed. Ready for Phase 3 (Portfolio & Data Services).
+**Phase 2 COMPLETE!** All 9 plans executed. Ready for Phase 3 (Portfolio & Data Services).
 
 **Phase 2 Deliverables:**
 - 9 pricers: FX_FWD, AMORT_LOAN, FIXED_BOND, CALLABLE_BOND, PUTABLE_BOND, FLOATING_RATE_BOND, INTEREST_RATE_SWAP, ABS_MBS, STRUCTURED_NOTE
@@ -198,17 +198,20 @@ Foundation [########] Core Compute [########] Portfolio [........] Regulatory [.
 - Monte Carlo simulation (Hull-White, Vasicek, CIR)
 - Liquidity risk metrics
 - Scenario management service
+- 26 golden tests (>=3 per pricer)
 
 **Files to reference:**
+- `.planning/phases/02-core-compute-engines/02-09-SUMMARY.md` — Gap closure golden tests summary
 - `.planning/phases/02-core-compute-engines/02-08-SUMMARY.md` — Risk and scenario analytics summary
-- All Phase 2 summaries (02-01 through 02-08)
+- All Phase 2 summaries (02-01 through 02-09)
 - `compute/pricers/` — All 9 pricer implementations
 - `compute/risk/` — Credit, market, and liquidity risk modules
 - `compute/quantlib/` — Curve construction and Monte Carlo
+- `compute/tests/golden/` — 26 golden tests
 
 **Git status:**
 - Main branch active
-- Phase 2 complete: 8 plans, 32 tasks, 50+ files created
+- Phase 2 complete: 9 plans, 35 tasks, 54+ files created
 - Ready to begin Phase 3: Portfolio & Data Services
 
 ---
