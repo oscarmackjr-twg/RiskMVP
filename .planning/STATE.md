@@ -21,16 +21,16 @@
 | Metric | Status |
 |--------|--------|
 | **Active Phase** | 01-foundation-infrastructure |
-| **Current Plan** | Plan 02 (completed) → Next: Plan 03 |
-| **Overall Progress** | 1% (1 of 5 plans in Phase 1 complete) |
+| **Current Plan** | Plans 01-02 (completed) → Next: Plan 03 |
+| **Overall Progress** | 40% (2 of 5 plans in Phase 1 complete) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [##......] Core Compute [........] Portfolio [........] Regulatory [........]
-     20%                     0%                    0%                  0%
+Foundation [####....] Core Compute [........] Portfolio [........] Regulatory [........]
+     40%                     0%                    0%                  0%
 ```
 
 ---
@@ -62,6 +62,7 @@ Foundation [##......] Core Compute [........] Portfolio [........] Regulatory [.
 | Success criteria verifiability | Observable user behavior | ✓ All criteria are user-facing |
 | Dependency clarity | Clear ordering | ✓ Linear with parallelization points |
 | Phase 01-foundation-infrastructure P02 | 130 | 2 tasks | 3 files |
+| Phase 01 P01 | 303 | 3 tasks | 7 files |
 
 ### Execution Readiness
 
@@ -127,36 +128,43 @@ Foundation [##......] Core Compute [........] Portfolio [........] Regulatory [.
 
 ### What Was Done in This Session
 
-**Phase 01 Plan 02: Pricer Registry Pattern**
+**Phase 01 Plan 01: Service Factory Refactor**
 
-1. **Refactored worker.py** to use registry pattern instead of if/elif dispatch
-2. **Created registry module** with auto-bootstrap functionality
-3. **Added 4 registry integration tests** to verify pattern works correctly
-4. **Verified all golden tests pass** (3 existing pricer tests still work)
-5. **Created SUMMARY.md** documenting architecture changes and decisions
-6. **Updated STATE.md** with progress and decisions
+1. **Implemented service factory pattern** with create_service_app() providing CORS, health checks, error handlers
+2. **Extended BaseAppSettings** with worker and orchestration configuration fields
+3. **Refactored all 3 services** to use factory pattern and shared models
+4. **Eliminated duplicate models** in run_orchestrator (ScenarioSpec, PortfolioScope, RunRequestedV1)
+5. **Created SUMMARY.md** documenting implementation and decisions
+6. **Updated STATE.md** with progress tracking
 
 **Commits:**
-- 9f70cd3: Refactored worker to use registry pattern
-- 8761666: Added registry integration tests
+- 97408b2: Implement service factory pattern with shared middleware
+- 967c97e: Extend BaseAppSettings with worker config
+- b0369c5: Replace local models with shared library imports
 
-**Duration:** 130 seconds (~2 minutes)
+**Duration:** 303 seconds (~5 minutes)
+
+---
+
+**Previous Session: Phase 01 Plan 02 - Pricer Registry Pattern** (completed earlier today)
 
 ### Next Session Starting Point
 
 **When resuming, continue with:**
-- Phase 01 Plan 03: Error handling patterns (shared library setup)
+- Phase 01 Plan 03: Docker containerization and deployment configuration
 - Phase 01 Plan 04: Database schema extensions
-- Phase 01 Plan 05: Docker and deployment configuration
+- Phase 01 Plan 05: AWS Infrastructure as Code (Terraform)
 
 **Files to reference:**
-- `.planning/phases/01-foundation-infrastructure/01-02-SUMMARY.md` — Completed plan summary
+- `.planning/phases/01-foundation-infrastructure/01-01-SUMMARY.md` — Plan 01 complete
+- `.planning/phases/01-foundation-infrastructure/01-02-SUMMARY.md` — Plan 02 complete
 - `.planning/phases/01-foundation-infrastructure/01-03-PLAN.md` — Next plan
 - `.planning/ROADMAP.md` — Phase goals and success criteria
 
 **Git status:**
 - Main branch active
-- 2 commits made for Plan 02
+- 3 commits made for Plan 01 (97408b2, 967c97e, b0369c5)
+- 2 commits made for Plan 02 (9f70cd3, 8761666)
 - Ready to proceed to Plan 03
 
 ---
