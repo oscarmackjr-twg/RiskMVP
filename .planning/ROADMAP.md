@@ -4,7 +4,7 @@
 **Version:** 1.0
 **Created:** 2026-02-11
 **Depth:** Quick (4 phases)
-**Status:** Phase 1 Complete, Phase 2 Planned
+**Status:** Phase 1 Complete, Phase 2 Complete
 
 ---
 
@@ -19,7 +19,7 @@ Expanding the Risk MVP from a working prototype into an institutional-grade port
 | Phase | Goal | Requirements Mapped | Success Criteria |
 |-------|------|-------------------|------------------|
 | **1 - Foundation & Infrastructure** ✓ | Platform skeleton ready; compute engine refactored with registry pattern; database schema extended for full analytics pipeline | PLAT-01, PLAT-02, PLAT-03, PLAT-04, PLAT-05, PLAT-06 | 6/6 verified |
-| **2 - Core Compute Engines** | Institutional-grade pricers, cashflow generation, risk analytics, and scenario execution; worker processes full pipeline end-to-end | PRICE-01 through PRICE-09, CF-01 through CF-06, RISK-01 through RISK-07, SCEN-01 through SCEN-04 | 8 success criteria |
+| **2 - Core Compute Engines** ✓ | Institutional-grade pricers, cashflow generation, risk analytics, and scenario execution; worker processes full pipeline end-to-end | PRICE-01 through PRICE-09, CF-01 through CF-06, RISK-01 through RISK-07, SCEN-01 through SCEN-04 | 8/8 verified |
 | **3 - Portfolio & Data Services** | Portfolio hierarchy, position management, reference data; data ingestion pipelines; independent query services for aggregation | PORT-01 through PORT-08, DATA-01 through DATA-04 | 6 success criteria |
 | **4 - Regulatory Analytics & Reporting** | Regulatory frameworks (GAAP/IFRS, Basel, CECL), audit trails, model governance; frontend expansion with domain-specific views and exports | REG-01 through REG-05, RPT-01 through RPT-04 | 5 success criteria |
 
@@ -87,15 +87,15 @@ Plans:
 **Plans:** 9 plans in 3 waves
 
 Plans:
-- [ ] 02-01-PLAN.md — QuantLib foundation (curve construction, day count, calendar) — Wave 1
-- [ ] 02-02-PLAN.md — Callable & putable bond pricers (TDD) — Wave 2
-- [ ] 02-03-PLAN.md — Floating-rate instrument pricer (TDD) — Wave 2
-- [ ] 02-04-PLAN.md — ABS/MBS pricer with prepayment modeling — Wave 2
-- [ ] 02-05-PLAN.md — Derivatives & structured product pricers — Wave 2
-- [ ] 02-06-PLAN.md — Cashflow modeling engine — Wave 2
-- [ ] 02-07-PLAN.md — Market risk analytics (duration, DV01, convexity, key rate) — Wave 3
-- [ ] 02-08-PLAN.md — Credit/liquidity risk, VaR/ES, Monte Carlo, scenario service — Wave 3
-- [ ] 02-09-PLAN.md — Gap closure: Add missing golden tests (putable bond, derivatives, structured) — Wave 1
+- [x] 02-01-PLAN.md — QuantLib foundation (curve construction, day count, calendar) ✓ 2026-02-11
+- [x] 02-02-PLAN.md — Callable & putable bond pricers (TDD) ✓ 2026-02-11
+- [x] 02-03-PLAN.md — Floating-rate instrument pricer (TDD) ✓ 2026-02-11
+- [x] 02-04-PLAN.md — ABS/MBS pricer with prepayment modeling ✓ 2026-02-11
+- [x] 02-05-PLAN.md — Derivatives & structured product pricers ✓ 2026-02-11
+- [x] 02-06-PLAN.md — Cashflow modeling engine ✓ 2026-02-11
+- [x] 02-07-PLAN.md — Market risk analytics (duration, DV01, convexity, key rate) ✓ 2026-02-11
+- [x] 02-08-PLAN.md — Credit/liquidity risk, VaR/ES, Monte Carlo, scenario service ✓ 2026-02-11
+- [x] 02-09-PLAN.md — Gap closure: Add missing golden tests (putable bond, derivatives, structured) ✓ 2026-02-11
 
 ### Requirements Mapped
 
