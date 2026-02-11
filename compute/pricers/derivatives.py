@@ -207,9 +207,28 @@ def _create_vanilla_swap(
     )
 
     # Create SOFR index (3M)
-    sofr_index = ql.USDLibor(ql.Period("3M"))
+    # Link the forward curve to the index for projection
     sofr_index_handle = ql.YieldTermStructureHandle(sofr_curve)
+    sofr_index = ql.USDLibor(ql.Period("3M"), sofr_index_handle)
     # Note: In production, would create proper SOFR index. Using USDLibor as proxy for MVP.
+
+    # Add historical fixing for the first coupon (if needed)
+    # QuantLib requires a fixing for the first floating coupon's fixing date
+    # For swaps starting on eval_date, the fixing date is typically 2 business days prior
+    fixing_date = eval_date - ql.Period(2, ql.Days)
+    try:
+        # Try to get the fixing; if it doesn't exist, add it
+        _ = sofr_index.fixing(fixing_date)
+    except RuntimeError:
+        # Add a fixing using the current forward rate
+        # This is the market-implied rate for that date
+        fixing_rate = sofr_curve.forwardRate(
+            eval_date,
+            eval_date + ql.Period(3, ql.Months),
+            ql.Actual360(),
+            ql.Simple
+        ).rate()
+        sofr_index.addFixing(fixing_date, fixing_rate)
 
     # Create swap
     swap = ql.VanillaSwap(

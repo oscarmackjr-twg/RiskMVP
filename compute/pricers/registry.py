@@ -39,10 +39,14 @@ def _bootstrap() -> None:
     from compute.pricers.fx_fwd import price_fx_fwd
     from compute.pricers.loan import price_loan
     from compute.pricers.bond import price_bond
+    from compute.pricers.derivatives import price_derivatives
+    from compute.pricers.structured import price_structured
 
     register("FX_FWD", price_fx_fwd)
     register("AMORT_LOAN", price_loan)
     register("FIXED_BOND", price_bond)
+    register("DERIVATIVES", price_derivatives)
+    register("STRUCTURED", price_structured)
 
 
 _bootstrap()
