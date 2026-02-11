@@ -2,7 +2,7 @@
 
 **Project:** IPRS Institutional Portfolio Risk & Analytics System
 **Created:** 2026-02-11
-**Last Updated:** 2026-02-11T17:52:50Z
+**Last Updated:** 2026-02-11T18:10:00Z
 
 ---
 
@@ -21,16 +21,16 @@
 | Metric | Status |
 |--------|--------|
 | **Active Phase** | 01-foundation-infrastructure |
-| **Current Plan** | Plans 01-02 (completed) → Next: Plan 03 |
-| **Overall Progress** | 40% (2 of 5 plans in Phase 1 complete) |
+| **Current Plan** | Plans 01-05 (completed) → Phase 1 Complete! |
+| **Overall Progress** | 100% (5 of 5 plans in Phase 1 complete) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [####....] Core Compute [........] Portfolio [........] Regulatory [........]
-     40%                     0%                    0%                  0%
+Foundation [########] Core Compute [........] Portfolio [........] Regulatory [........]
+    100%                     0%                    0%                  0%
 ```
 
 ---
@@ -61,8 +61,9 @@ Foundation [####....] Core Compute [........] Portfolio [........] Regulatory [.
 | Success criteria per phase | 2-5 | ✓ Phase 1: 6, Phase 2: 8, Phase 3: 6, Phase 4: 9 |
 | Success criteria verifiability | Observable user behavior | ✓ All criteria are user-facing |
 | Dependency clarity | Clear ordering | ✓ Linear with parallelization points |
-| Phase 01-foundation-infrastructure P02 | 130 | 2 tasks | 3 files |
 | Phase 01 P01 | 303 | 3 tasks | 7 files |
+| Phase 01 P02 | 130 | 2 tasks | 3 files |
+| Phase 01 P05 | 140 | 3 tasks | 3 files |
 
 ### Execution Readiness
 
@@ -90,6 +91,9 @@ Foundation [####....] Core Compute [........] Portfolio [........] Regulatory [.
 | Regulatory in Phase 4 (not Phase 3) | Regulatory calculations depend on all compute (pricing, risk, cashflow). Phase 4 builds after Phase 2 complete. | Dependency graph |
 | Auto-bootstrap registry on import | Eliminates manual registration, ensures all pricers registered automatically | Phase 1 Plan 02 |
 | Function-based pricer registry | No base class required, backward-compatible with existing pricers | Phase 1 Plan 02 |
+| OIDC authentication for GitHub Actions | More secure than long-lived credentials, no rotation needed, follows AWS best practices | Phase 1 Plan 05 |
+| Matrix deployment strategy for ECS | Parallel deployment to all services, faster and more consistent than sequential | Phase 1 Plan 05 |
+| Commit SHA image tagging | Enables rollback to specific versions, combined with "latest" for dev environments | Phase 1 Plan 05 |
 
 ### Architectural Constraints
 
@@ -128,44 +132,43 @@ Foundation [####....] Core Compute [........] Portfolio [........] Regulatory [.
 
 ### What Was Done in This Session
 
-**Phase 01 Plan 01: Service Factory Refactor**
+**Phase 01 Plan 05: GitHub Actions CI/CD**
 
-1. **Implemented service factory pattern** with create_service_app() providing CORS, health checks, error handlers
-2. **Extended BaseAppSettings** with worker and orchestration configuration fields
-3. **Refactored all 3 services** to use factory pattern and shared models
-4. **Eliminated duplicate models** in run_orchestrator (ScenarioSpec, PortfolioScope, RunRequestedV1)
-5. **Created SUMMARY.md** documenting implementation and decisions
-6. **Updated STATE.md** with progress tracking
+1. **Created CI workflow** (ci.yml) with lint, test, and build jobs for all commits and PRs
+2. **Created deploy workflow** (deploy.yml) with ECR push and ECS deployment for main branch
+3. **Documented workflows** with GitHub secrets setup, IAM permissions, and troubleshooting guide
+4. **Established quality gates** requiring all CI checks to pass before merge
+5. **Implemented blue/green deployment** via ECS task definition revisions with stabilization checks
 
 **Commits:**
-- 97408b2: Implement service factory pattern with shared middleware
-- 967c97e: Extend BaseAppSettings with worker config
-- b0369c5: Replace local models with shared library imports
+- 14b105a: Add GitHub Actions CI workflow
+- 458d856: Add GitHub Actions deploy workflow
+- 042b150: Document CI/CD workflows and setup
 
-**Duration:** 303 seconds (~5 minutes)
+**Duration:** 140 seconds (~2.3 minutes)
 
 ---
 
-**Previous Session: Phase 01 Plan 02 - Pricer Registry Pattern** (completed earlier today)
+**Phase 1 Complete!** All 5 plans executed:
+- Plan 01: Service Factory Refactor (3 commits, 7 files)
+- Plan 02: Pricer Registry Pattern (2 commits, 3 files)
+- Plan 03: Docker Containerization (commits from earlier session)
+- Plan 04: Terraform Infrastructure (commits from earlier session)
+- Plan 05: GitHub Actions CI/CD (3 commits, 3 files)
 
 ### Next Session Starting Point
 
-**When resuming, continue with:**
-- Phase 01 Plan 03: Docker containerization and deployment configuration
-- Phase 01 Plan 04: Database schema extensions
-- Phase 01 Plan 05: AWS Infrastructure as Code (Terraform)
+**Phase 1 Foundation is complete. Ready to begin Phase 2: Core Compute Engines**
 
 **Files to reference:**
-- `.planning/phases/01-foundation-infrastructure/01-01-SUMMARY.md` — Plan 01 complete
-- `.planning/phases/01-foundation-infrastructure/01-02-SUMMARY.md` — Plan 02 complete
-- `.planning/phases/01-foundation-infrastructure/01-03-PLAN.md` — Next plan
-- `.planning/ROADMAP.md` — Phase goals and success criteria
+- `.planning/ROADMAP.md` — Phase 2 goals and success criteria
+- `.planning/phases/01-foundation-infrastructure/` — All Phase 1 summaries
+- Phase 2 will focus on institutional-grade pricers, risk engines, and scenario computation
 
 **Git status:**
 - Main branch active
-- 3 commits made for Plan 01 (97408b2, 967c97e, b0369c5)
-- 2 commits made for Plan 02 (9f70cd3, 8761666)
-- Ready to proceed to Plan 03
+- Phase 1 complete with all infrastructure in place
+- Ready to proceed to Phase 2 compute engines
 
 ---
 
