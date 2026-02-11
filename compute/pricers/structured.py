@@ -6,6 +6,7 @@ Supports senior, mezzanine, and equity tranches with priority-of-payments struct
 from __future__ import annotations
 
 from typing import Dict, List
+import copy
 import QuantLib as ql
 from compute.cashflow.waterfall import apply_waterfall
 from compute.quantlib.curve_builder import build_discount_curve
@@ -33,8 +34,8 @@ def price_structured(
     Returns:
         Dict mapping measure names to computed values.
     """
-    # Apply scenario to market data (simplified for MVP)
-    snap = market_snapshot.copy()
+    # Apply scenario to market data
+    snap = _apply_scenario(market_snapshot, scenario_id)
 
     # Get evaluation date
     eval_date_str = snap.get("snapshot_date", "2026-02-15")
@@ -227,3 +228,43 @@ def _build_curve_from_snapshot(
     }
 
     return build_discount_curve(market_data, curve_id)
+
+
+def _apply_scenario(market_snapshot: dict, scenario_id: str) -> dict:
+    """Apply scenario to market snapshot.
+
+    Args:
+        market_snapshot: Market snapshot dict
+        scenario_id: Scenario identifier (BASE, RATES_UP, RATES_DOWN, etc.)
+
+    Returns:
+        Modified market snapshot with scenario applied
+    """
+    # Deep copy curves to avoid modifying original
+    snapshot = {
+        "snapshot_date": market_snapshot.get("snapshot_date"),
+        "curves": copy.deepcopy(market_snapshot.get("curves", [])),
+        "scenarios": market_snapshot.get("scenarios", {})
+    }
+
+    if scenario_id == "BASE":
+        return snapshot
+
+    # Check for custom scenarios in market data
+    scenarios = snapshot.get("scenarios", {})
+    if scenario_id in scenarios:
+        scenario = scenarios[scenario_id]
+
+        if scenario["type"] == "PARALLEL_SHIFT":
+            shift = float(scenario["shift"])
+            affected_curves = scenario.get("curves", [])
+
+            for curve in snapshot.get("curves", []):
+                if curve["curve_id"] in affected_curves:
+                    # Apply parallel shift to all nodes
+                    for node in curve.get("nodes", []):
+                        node["rate"] = float(node["rate"]) + shift
+
+        return snapshot
+
+    raise ValueError(f"Unsupported scenario_id: {scenario_id}")
