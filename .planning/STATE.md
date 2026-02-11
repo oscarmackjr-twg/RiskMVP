@@ -21,16 +21,16 @@
 | Metric | Status |
 |--------|--------|
 | **Active Phase** | Phase 2: Core Compute Engines (IN PROGRESS) |
-| **Current Plan** | 02-05 COMPLETE ✓ — Plan 02-06 next |
-| **Overall Progress** | 33% (Phase 1 complete + 2/8 Phase 2 plans, 9/49 requirements delivered) |
+| **Current Plan** | 02-03 COMPLETE ✓ — Multiple plans complete (01, 03, 04, 05) |
+| **Overall Progress** | 38% (Phase 1 complete + 4/8 Phase 2 plans, 11/49 requirements delivered) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [########] Core Compute [##......] Portfolio [........] Regulatory [........]
-    100%                    25%                     0%                  0%
+Foundation [########] Core Compute [####....] Portfolio [........] Regulatory [........]
+    100%                    50%                     0%                  0%
 ```
 
 ---
@@ -68,6 +68,7 @@ Foundation [########] Core Compute [##......] Portfolio [........] Regulatory [.
 | Phase 02 P05 | 374 | 3 tasks | 6 files |
 | Phase 02 P06 | 330 | 3 tasks | 2 files |
 | Phase 02 P05 | 374 | 3 tasks | 6 files |
+| Phase 02 P03 | 630 | 4 tasks | 4 files |
 
 ### Execution Readiness
 
@@ -110,6 +111,9 @@ Foundation [########] Core Compute [##......] Portfolio [........] Regulatory [.
 | Fixed Hull-White parameters (a=0.03, sigma=0.12) | Market-standard USD parameters for callable/putable bonds; defer swaption vol calibration to future enhancement | Phase 2 Plan 02 |
 | Tree grid points=40 for embedded options | Balance accuracy and performance for callable/putable bond pricing; industry standard for tree-based valuation | Phase 2 Plan 02 |
 | Filter future cashflows at generation | pay_date > as_of_date filtering enables mid-life valuation and partial periods | Phase 2 Plan 06 |
+| BlackIborCouponPricer with 20% flat volatility | Caps/floors require Black model for embedded caplet/floorlet valuation; 20% vol typical for SOFR | Phase 2 Plan 03 |
+| Multi-curve framework for floating-rate pricer | Separate OIS discount and SOFR projection curves; post-2008 industry standard for basis spread modeling | Phase 2 Plan 03 |
+| Infer historical fixings from flat rate | QuantLib requires index fixings for past coupon periods; use flat rate for test scenarios | Phase 2 Plan 03 |
 
 ### Architectural Constraints
 
