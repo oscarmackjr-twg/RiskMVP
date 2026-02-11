@@ -148,35 +148,39 @@ Foundation [########] Core Compute [##......] Portfolio [........] Regulatory [.
 
 ### What Was Done in This Session
 
-**Phase 02 Plan 06: Payment Schedule Generation Engine**
+**Phase 02 Plan 02: Callable and Putable Bond Pricers**
 
-1. **Implemented generate_schedule()** - QuantLib-based cashflow schedule generator supporting LEVEL_PAY, BULLET, and CUSTOM amortization
-2. **Verified amortization logic** - level_pay_schedule, bullet_schedule, custom_schedule already implemented in Plan 02-04
-3. **QuantLib Schedule integration** - Date generation with calendar adjustments using ModifiedFollowing convention
-4. **Future-only filtering** - Schedules filter for pay_date > as_of_date enabling mid-life valuation
-5. **Comprehensive test suite** - 19 tests covering all amortization types, schedule generation, and edge cases
-6. **Bug fixes** - Fixed QuantLib API usage, schedule date indexing, issue date exclusion, and validation
+1. **Implemented callable bond pricer** - Hull-White model with TreeCallableFixedRateBondEngine for embedded call options
+2. **Implemented putable bond pricer** - Same tree-based engine with Callability.Put for put options
+3. **OAS calculation** - Brent solver matching market price for option-adjusted spread
+4. **YTC/YTP measures** - Yield-to-Call and Yield-to-Put from optimal exercise dates
+5. **Registered both pricers** - Added CALLABLE_BOND and PUTABLE_BOND to registry
+6. **Fixed 4 bugs** - QuantLib Date deep copy, frequency/period conversion, test expectations, bondYield API
 
 **Commits:**
-- 2171df5: feat(02-06): implement payment schedule generator with QuantLib
-- f480bc1: test(02-06): add comprehensive tests for cashflow generation
+- c1cb231: test(02-02): add failing tests for callable bond
+- 2dc089f: feat(02-02): implement callable bond pricer with OAS
+- e2aff77: test(02-02): add failing tests for putable bond
+- c55006e: feat(02-02): implement putable bond pricer
+- 7111043: feat(02-02): register callable and putable bond pricers
 
-**Duration:** 330 seconds (5 min 30 sec)
+**Duration:** 446 seconds (7 min 26 sec)
 
 ---
 
-**Phase 2 Plan 06 Complete!** Cashflow generation infrastructure ready.
-- Payment schedule generator with QuantLib date handling
-- All amortization types (level pay, bullet, custom)
-- Future-only filtering for mid-life valuation
-- 19 tests validating all scenarios and edge cases
+**Phase 2 Plan 02 Complete!** Callable and putable bond pricers operational.
+- Tree-based valuation with Hull-White short rate model
+- OAS calculation via Brent solver
+- YTC and YTP measures
+- 5 golden tests passing (3 callable, 2 putable)
+- Both pricers registered in worker dispatch
 
 ### Next Session Starting Point
 
-**Phase 2 Plan 06 complete. Plan 02-01 previously completed. Next: Plan 02-02 (Callable/Putable Bond Pricer)**
+**Phase 2 Plan 02 complete. Plans 02-01, 02-04, 02-05, 02-06 also completed. Next: Continue Phase 2 execution**
 
 **Files to reference:**
-- `.planning/phases/02-core-compute-engines/02-06-SUMMARY.md` — Cashflow generation summary
+- `.planning/phases/02-core-compute-engines/02-02-SUMMARY.md` — Callable/putable bond pricer summary
 - `.planning/phases/02-core-compute-engines/02-01-SUMMARY.md` — QuantLib curve construction summary
 - `.planning/phases/02-core-compute-engines/02-02-PLAN.md` — Next plan (callable/putable bonds)
 - `compute/cashflow/generator.py` — Payment schedule generation engine
