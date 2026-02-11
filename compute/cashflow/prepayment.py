@@ -63,12 +63,13 @@ def apply_psa_prepayment(
         # Convert CPR to SMM (Single Monthly Mortality)
         smm = cpr_to_smm(cpr)
 
-        # Calculate prepayment amount
+        # Calculate prepayment amount (on beginning balance, BEFORE scheduled principal)
+        # Note: Scheduled principal payment will also reduce the balance
         prepay_amount = remaining_principal * smm
         cf['prepayment'] = prepay_amount
 
-        # Update remaining principal
-        cf['remaining_principal'] = remaining_principal - prepay_amount
+        # DO NOT update remaining_principal here - it represents BEGINNING balance
+        # The pricer will handle the full balance reduction (scheduled + prepayment + defaults)
 
         result.append(cf)
 
@@ -113,8 +114,7 @@ def apply_cpr_prepayment(
         prepay_amount = remaining_principal * smm
         cf['prepayment'] = prepay_amount
 
-        # Update remaining principal
-        cf['remaining_principal'] = remaining_principal - prepay_amount
+        # DO NOT update remaining_principal here - it represents BEGINNING balance
 
         result.append(cf)
 

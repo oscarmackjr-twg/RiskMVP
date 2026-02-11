@@ -52,7 +52,9 @@ def apply_default_model(
         cf['recovery'] = recovery_amount
 
         # Reduce principal cashflow by default amount
-        if 'principal' in cf:
+        if 'scheduled_principal' in cf:
+            cf['scheduled_principal'] = cf['scheduled_principal'] - default_amount
+        elif 'principal' in cf:
             cf['principal'] = cf['principal'] - default_amount
 
         # Update remaining principal

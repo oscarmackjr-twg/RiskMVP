@@ -12,7 +12,11 @@ def apply_scenario(snapshot: dict, scenario_id: str) -> dict:
         for c in s.get("curves", []):
             if c.get("curve_id") in ("USD-OIS", "EUR-OIS"):
                 for n in c.get("nodes", []):
-                    n["zero_rate"] = float(n["zero_rate"]) + bump
+                    # Support both 'zero_rate' and 'rate' field names
+                    if "zero_rate" in n:
+                        n["zero_rate"] = float(n["zero_rate"]) + bump
+                    elif "rate" in n:
+                        n["rate"] = float(n["rate"]) + bump
         return s
 
     if scenario_id == "SPREAD_25BP":
@@ -20,7 +24,11 @@ def apply_scenario(snapshot: dict, scenario_id: str) -> dict:
         for c in s.get("curves", []):
             if c.get("curve_id") in ("LOAN-SPREAD", "FI-SPREAD"):
                 for n in c.get("nodes", []):
-                    n["zero_rate"] = float(n["zero_rate"]) + bump
+                    # Support both 'zero_rate' and 'rate' field names
+                    if "zero_rate" in n:
+                        n["zero_rate"] = float(n["zero_rate"]) + bump
+                    elif "rate" in n:
+                        n["rate"] = float(n["rate"]) + bump
         return s
 
     if scenario_id == "FX_SPOT_1PCT":
