@@ -2,7 +2,7 @@
 
 **Project:** IPRS Institutional Portfolio Risk & Analytics System
 **Created:** 2026-02-11
-**Last Updated:** 2026-02-11T18:10:00Z
+**Last Updated:** 2026-02-11T20:02:51Z
 
 ---
 
@@ -20,17 +20,17 @@
 
 | Metric | Status |
 |--------|--------|
-| **Active Phase** | Phase 1 COMPLETE ✓ — Phase 2 next |
-| **Current Plan** | — (awaiting Phase 2 planning) |
-| **Overall Progress** | 25% (Phase 1 of 4 complete, 6/49 requirements delivered) |
+| **Active Phase** | Phase 2: Core Compute Engines (IN PROGRESS) |
+| **Current Plan** | 02-01 COMPLETE ✓ — Plan 02-02 next |
+| **Overall Progress** | 27% (Phase 1 complete + 1/8 Phase 2 plans, 7/49 requirements delivered) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [########] Core Compute [........] Portfolio [........] Regulatory [........]
-    100%                     0%                    0%                  0%
+Foundation [########] Core Compute [#.......] Portfolio [........] Regulatory [........]
+    100%                    12.5%                   0%                  0%
 ```
 
 ---
@@ -94,6 +94,10 @@ Foundation [########] Core Compute [........] Portfolio [........] Regulatory [.
 | OIDC authentication for GitHub Actions | More secure than long-lived credentials, no rotation needed, follows AWS best practices | Phase 1 Plan 05 |
 | Matrix deployment strategy for ECS | Parallel deployment to all services, faster and more consistent than sequential | Phase 1 Plan 05 |
 | Commit SHA image tagging | Enables rollback to specific versions, combined with "latest" for dev environments | Phase 1 Plan 05 |
+| QuantLib PiecewiseLogCubicDiscount for curves | Industry standard with 20+ years development; no hand-rolled bootstrapping | Phase 2 Plan 01 |
+| Multi-curve framework from start | Modern fixed income requires separate OIS discount and SOFR/LIBOR projection curves | Phase 2 Plan 01 |
+| Return QuantLib objects directly | No custom wrappers; downstream pricers use QuantLib YieldTermStructure natively | Phase 2 Plan 01 |
+| Factory pattern for day count/calendar | String-based factories (get_day_counter, get_calendar) provide convenient API over QuantLib | Phase 2 Plan 01 |
 
 ### Architectural Constraints
 
@@ -132,43 +136,45 @@ Foundation [########] Core Compute [........] Portfolio [........] Regulatory [.
 
 ### What Was Done in This Session
 
-**Phase 01 Plan 05: GitHub Actions CI/CD**
+**Phase 02 Plan 01: QuantLib Curve Construction & Conventions**
 
-1. **Created CI workflow** (ci.yml) with lint, test, and build jobs for all commits and PRs
-2. **Created deploy workflow** (deploy.yml) with ECR push and ECS deployment for main branch
-3. **Documented workflows** with GitHub secrets setup, IAM permissions, and troubleshooting guide
-4. **Established quality gates** requiring all CI checks to pass before merge
-5. **Implemented blue/green deployment** via ECS task definition revisions with stabilization checks
+1. **Installed QuantLib 1.41** - Added QuantLib-Python dependency for institutional-grade curve construction
+2. **Implemented curve_builder.py** - build_discount_curve(), build_forward_curve(), build_basis_curve() using PiecewiseLogCubicDiscount
+3. **Implemented day_count.py** - get_day_counter() factory with ACT/360, ACT/365, ACT/ACT, 30/360 variants
+4. **Implemented calendar.py** - get_calendar() factory with US-GOVT, UK, TARGET, JAPAN calendars
+5. **Implemented interpolation.py** - InterpolationMethod enum defining LOG_CUBIC, LINEAR, CUBIC_SPLINE
+6. **Created golden tests** - 4 tests validating curve bootstrapping, day counts, calendars, multi-curve framework
 
 **Commits:**
-- 14b105a: Add GitHub Actions CI workflow
-- 458d856: Add GitHub Actions deploy workflow
-- 042b150: Document CI/CD workflows and setup
+- 3f2f0ff: feat(02-01): implement QuantLib curve construction
+- 88d0b82: feat(02-01): implement QuantLib day count, calendar, and interpolation wrappers
+- 47e8a59: test(02-01): add golden tests for curve construction and conventions
 
-**Duration:** 140 seconds (~2.3 minutes)
+**Duration:** 282 seconds (4 min 42 sec)
 
 ---
 
-**Phase 1 Complete!** All 5 plans executed:
-- Plan 01: Service Factory Refactor (3 commits, 7 files)
-- Plan 02: Pricer Registry Pattern (2 commits, 3 files)
-- Plan 03: Docker Containerization (commits from earlier session)
-- Plan 04: Terraform Infrastructure (commits from earlier session)
-- Plan 05: GitHub Actions CI/CD (3 commits, 3 files)
+**Phase 2 Plan 01 Complete!** QuantLib integration foundation in place.
+- Multi-curve framework (OIS discount + SOFR/LIBOR forward curves)
+- Day count conventions (all ISDA variants)
+- Business day calendars (major financial centers)
+- Golden tests validate against reference calculations
 
 ### Next Session Starting Point
 
-**Phase 1 Foundation is complete. Ready to begin Phase 2: Core Compute Engines**
+**Phase 2 Plan 01 complete. Ready for Plan 02-02 (Callable/Putable Bond Pricer)**
 
 **Files to reference:**
-- `.planning/ROADMAP.md` — Phase 2 goals and success criteria
-- `.planning/phases/01-foundation-infrastructure/` — All Phase 1 summaries
-- Phase 2 will focus on institutional-grade pricers, risk engines, and scenario computation
+- `.planning/phases/02-core-compute-engines/02-01-SUMMARY.md` — QuantLib curve construction summary
+- `.planning/phases/02-core-compute-engines/02-02-PLAN.md` — Next plan (callable/putable bonds)
+- `compute/quantlib/curve_builder.py` — Multi-curve framework ready for bond pricing
+- `compute/quantlib/day_count.py` — Day count conventions for coupon calculations
 
 **Git status:**
 - Main branch active
-- Phase 1 complete with all infrastructure in place
-- Ready to proceed to Phase 2 compute engines
+- Phase 2 Plan 01 complete (3 commits, 5 files)
+- QuantLib 1.41 installed and integrated
+- Ready to implement callable/putable bond pricer using QuantLib TreeCallableFixedRateBondEngine
 
 ---
 
