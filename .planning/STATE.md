@@ -2,7 +2,7 @@
 
 **Project:** IPRS Institutional Portfolio Risk & Analytics System
 **Created:** 2026-02-11
-**Last Updated:** 2026-02-11T20:02:51Z
+**Last Updated:** 2026-02-11T20:12:36Z
 
 ---
 
@@ -21,16 +21,16 @@
 | Metric | Status |
 |--------|--------|
 | **Active Phase** | Phase 2: Core Compute Engines (IN PROGRESS) |
-| **Current Plan** | 02-01 COMPLETE ✓ — Plan 02-02 next |
-| **Overall Progress** | 27% (Phase 1 complete + 1/8 Phase 2 plans, 7/49 requirements delivered) |
+| **Current Plan** | 02-06 COMPLETE ✓ — Plan 02-02 next |
+| **Overall Progress** | 30% (Phase 1 complete + 2/8 Phase 2 plans, 8/49 requirements delivered) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [########] Core Compute [#.......] Portfolio [........] Regulatory [........]
-    100%                    12.5%                   0%                  0%
+Foundation [########] Core Compute [##......] Portfolio [........] Regulatory [........]
+    100%                    25%                     0%                  0%
 ```
 
 ---
@@ -64,6 +64,8 @@ Foundation [########] Core Compute [#.......] Portfolio [........] Regulatory [.
 | Phase 01 P01 | 303 | 3 tasks | 7 files |
 | Phase 01 P02 | 130 | 2 tasks | 3 files |
 | Phase 01 P05 | 140 | 3 tasks | 3 files |
+| Phase 02 P06 | 330 | 3 tasks | 2 files |
+| Phase 02 P05 | 374 | 3 tasks | 6 files |
 
 ### Execution Readiness
 
@@ -98,6 +100,8 @@ Foundation [########] Core Compute [#.......] Portfolio [........] Regulatory [.
 | Multi-curve framework from start | Modern fixed income requires separate OIS discount and SOFR/LIBOR projection curves | Phase 2 Plan 01 |
 | Return QuantLib objects directly | No custom wrappers; downstream pricers use QuantLib YieldTermStructure natively | Phase 2 Plan 01 |
 | Factory pattern for day count/calendar | String-based factories (get_day_counter, get_calendar) provide convenient API over QuantLib | Phase 2 Plan 01 |
+| QuantLib Schedule for date generation | Use QuantLib's battle-tested calendar logic; skip issue date in payment schedules | Phase 2 Plan 06 |
+| Filter future cashflows at generation | pay_date > as_of_date filtering enables mid-life valuation and partial periods | Phase 2 Plan 06 |
 
 ### Architectural Constraints
 
@@ -136,44 +140,44 @@ Foundation [########] Core Compute [#.......] Portfolio [........] Regulatory [.
 
 ### What Was Done in This Session
 
-**Phase 02 Plan 01: QuantLib Curve Construction & Conventions**
+**Phase 02 Plan 06: Payment Schedule Generation Engine**
 
-1. **Installed QuantLib 1.41** - Added QuantLib-Python dependency for institutional-grade curve construction
-2. **Implemented curve_builder.py** - build_discount_curve(), build_forward_curve(), build_basis_curve() using PiecewiseLogCubicDiscount
-3. **Implemented day_count.py** - get_day_counter() factory with ACT/360, ACT/365, ACT/ACT, 30/360 variants
-4. **Implemented calendar.py** - get_calendar() factory with US-GOVT, UK, TARGET, JAPAN calendars
-5. **Implemented interpolation.py** - InterpolationMethod enum defining LOG_CUBIC, LINEAR, CUBIC_SPLINE
-6. **Created golden tests** - 4 tests validating curve bootstrapping, day counts, calendars, multi-curve framework
+1. **Implemented generate_schedule()** - QuantLib-based cashflow schedule generator supporting LEVEL_PAY, BULLET, and CUSTOM amortization
+2. **Verified amortization logic** - level_pay_schedule, bullet_schedule, custom_schedule already implemented in Plan 02-04
+3. **QuantLib Schedule integration** - Date generation with calendar adjustments using ModifiedFollowing convention
+4. **Future-only filtering** - Schedules filter for pay_date > as_of_date enabling mid-life valuation
+5. **Comprehensive test suite** - 19 tests covering all amortization types, schedule generation, and edge cases
+6. **Bug fixes** - Fixed QuantLib API usage, schedule date indexing, issue date exclusion, and validation
 
 **Commits:**
-- 3f2f0ff: feat(02-01): implement QuantLib curve construction
-- 88d0b82: feat(02-01): implement QuantLib day count, calendar, and interpolation wrappers
-- 47e8a59: test(02-01): add golden tests for curve construction and conventions
+- 2171df5: feat(02-06): implement payment schedule generator with QuantLib
+- f480bc1: test(02-06): add comprehensive tests for cashflow generation
 
-**Duration:** 282 seconds (4 min 42 sec)
+**Duration:** 330 seconds (5 min 30 sec)
 
 ---
 
-**Phase 2 Plan 01 Complete!** QuantLib integration foundation in place.
-- Multi-curve framework (OIS discount + SOFR/LIBOR forward curves)
-- Day count conventions (all ISDA variants)
-- Business day calendars (major financial centers)
-- Golden tests validate against reference calculations
+**Phase 2 Plan 06 Complete!** Cashflow generation infrastructure ready.
+- Payment schedule generator with QuantLib date handling
+- All amortization types (level pay, bullet, custom)
+- Future-only filtering for mid-life valuation
+- 19 tests validating all scenarios and edge cases
 
 ### Next Session Starting Point
 
-**Phase 2 Plan 01 complete. Ready for Plan 02-02 (Callable/Putable Bond Pricer)**
+**Phase 2 Plan 06 complete. Plan 02-01 previously completed. Next: Plan 02-02 (Callable/Putable Bond Pricer)**
 
 **Files to reference:**
+- `.planning/phases/02-core-compute-engines/02-06-SUMMARY.md` — Cashflow generation summary
 - `.planning/phases/02-core-compute-engines/02-01-SUMMARY.md` — QuantLib curve construction summary
 - `.planning/phases/02-core-compute-engines/02-02-PLAN.md` — Next plan (callable/putable bonds)
+- `compute/cashflow/generator.py` — Payment schedule generation engine
 - `compute/quantlib/curve_builder.py` — Multi-curve framework ready for bond pricing
-- `compute/quantlib/day_count.py` — Day count conventions for coupon calculations
 
 **Git status:**
 - Main branch active
-- Phase 2 Plan 01 complete (3 commits, 5 files)
-- QuantLib 1.41 installed and integrated
+- Phase 2 Plan 01 complete (3 commits, 5 files) - QuantLib curves
+- Phase 2 Plan 06 complete (2 commits, 2 files) - Cashflow generation
 - Ready to implement callable/putable bond pricer using QuantLib TreeCallableFixedRateBondEngine
 
 ---
