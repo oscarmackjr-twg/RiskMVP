@@ -30,6 +30,15 @@ Expanding the Risk MVP from a working prototype into an institutional-grade port
 
 **Why First:** All downstream work depends on shared libraries, Docker, Terraform, database schema, and registry-pattern refactoring. Must be in place before scaling compute engines.
 
+**Plans:** 5 plans in 4 waves
+
+Plans:
+- [ ] 01-01-PLAN.md — Refactor services to use shared library + service factory (PLAT-01, PLAT-02)
+- [ ] 01-02-PLAN.md — Refactor worker to use registry pattern (PLAT-06)
+- [ ] 01-03-PLAN.md — Docker containerization for all services + worker (PLAT-03)
+- [ ] 01-04-PLAN.md — Terraform AWS infrastructure (PLAT-04)
+- [ ] 01-05-PLAN.md — GitHub Actions CI/CD pipeline (PLAT-05)
+
 ### Requirements Mapped
 
 - **PLAT-01**: Shared Pydantic models, events, auth middleware, and config across all services
