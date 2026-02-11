@@ -84,7 +84,7 @@ Plans:
 
 **Why Here:** Phase 1 infrastructure is prerequisite. This phase builds the analytics engines that drive all downstream value. Research flags this as critical: "don't build services before compute is done."
 
-**Plans:** 8 plans in 3 waves
+**Plans:** 9 plans in 3 waves
 
 Plans:
 - [ ] 02-01-PLAN.md — QuantLib foundation (curve construction, day count, calendar) — Wave 1
@@ -95,6 +95,7 @@ Plans:
 - [ ] 02-06-PLAN.md — Cashflow modeling engine — Wave 2
 - [ ] 02-07-PLAN.md — Market risk analytics (duration, DV01, convexity, key rate) — Wave 3
 - [ ] 02-08-PLAN.md — Credit/liquidity risk, VaR/ES, Monte Carlo, scenario service — Wave 3
+- [ ] 02-09-PLAN.md — Gap closure: Add missing golden tests (putable bond, derivatives, structured) — Wave 1
 
 ### Requirements Mapped
 
