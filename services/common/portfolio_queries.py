@@ -319,3 +319,121 @@ def build_product_type_aggregation_query(
     }
 
     return query, params
+
+
+def build_hierarchy_tree_query(portfolio_id: str, run_id: str | None = None) -> tuple[str, dict]:
+    """
+    Build recursive CTE query to fetch portfolio hierarchy tree.
+
+    Returns entire tree rooted at portfolio_id with:
+    - All descendant nodes (recursive)
+    - Position count per node
+    - PV sum per node (if run_id provided)
+
+    Args:
+        portfolio_id: Root portfolio node ID
+        run_id: Optional run ID for PV aggregation (uses BASE scenario)
+
+    Returns:
+        Tuple of (query_string, params_dict)
+
+    Example result row:
+        {
+            'portfolio_node_id': 'port-123',
+            'name': 'Test Fund',
+            'parent_id': None,
+            'node_type': 'FUND',
+            'depth': 1,
+            'tree_path': 'port-123',
+            'position_count': 5,
+            'pv_sum': 1000000.00
+        }
+    """
+    query = """
+        WITH RECURSIVE hierarchy AS (
+          -- Base case: start with the root node
+          SELECT portfolio_node_id, name, parent_id, node_type,
+                 tags_json, metadata_json, created_at,
+                 1 AS depth,
+                 CAST(portfolio_node_id AS text) AS tree_path
+          FROM portfolio_node
+          WHERE portfolio_node_id = %(pid)s
+
+          UNION ALL
+
+          -- Recursive case: find children
+          SELECT pn.portfolio_node_id, pn.name, pn.parent_id, pn.node_type,
+                 pn.tags_json, pn.metadata_json, pn.created_at,
+                 h.depth + 1,
+                 h.tree_path || '/' || pn.portfolio_node_id
+          FROM portfolio_node pn
+          INNER JOIN hierarchy h ON pn.parent_id = h.portfolio_node_id
+          WHERE h.depth < 10  -- Prevent runaway recursion
+        )
+        SELECT h.*,
+               COUNT(DISTINCT pos.position_id) AS position_count,
+               COALESCE(SUM((vr.measures_json ->> 'PV')::numeric), 0) AS pv_sum
+        FROM hierarchy h
+        LEFT JOIN position pos ON h.portfolio_node_id = pos.portfolio_node_id
+          AND pos.status = 'ACTIVE'
+        LEFT JOIN valuation_result vr ON pos.position_id = vr.position_id
+          AND (%(rid)s IS NULL OR vr.run_id = %(rid)s)
+          AND vr.scenario_id = 'BASE'
+        GROUP BY h.portfolio_node_id, h.name, h.parent_id, h.node_type,
+                 h.tags_json, h.metadata_json, h.created_at, h.depth, h.tree_path
+        ORDER BY h.tree_path
+    """
+
+    params = {
+        "pid": portfolio_id,
+        "rid": run_id
+    }
+
+    return query, params
+
+
+def build_tree_structure(rows: list[dict]) -> dict | None:
+    """
+    Convert flat CTE result rows into nested tree structure.
+
+    Args:
+        rows: List of dicts from build_hierarchy_tree_query result
+
+    Returns:
+        Root node dict with nested 'children' lists, or None if empty
+
+    Example:
+        Input: [
+            {'portfolio_node_id': 'p1', 'parent_id': None, 'name': 'Fund', ...},
+            {'portfolio_node_id': 'p2', 'parent_id': 'p1', 'name': 'Desk', ...},
+        ]
+        Output: {
+            'portfolio_node_id': 'p1',
+            'name': 'Fund',
+            'children': [
+                {'portfolio_node_id': 'p2', 'name': 'Desk', 'children': []}
+            ]
+        }
+    """
+    if not rows:
+        return None
+
+    # Build node lookup
+    nodes = {}
+    for row in rows:
+        node = dict(row)
+        node['children'] = []
+        nodes[node['portfolio_node_id']] = node
+
+    # Link children to parents
+    root = None
+    for row in rows:
+        node = nodes[row['portfolio_node_id']]
+        if row['parent_id'] is None:
+            root = node
+        else:
+            parent = nodes.get(row['parent_id'])
+            if parent:
+                parent['children'].append(node)
+
+    return root
