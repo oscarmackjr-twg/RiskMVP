@@ -1,0 +1,62 @@
+# Python cache and compiled files
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Virtual environments
+.venv
+venv
+env
+ENV
+
+# Package build artifacts
+*.egg-info
+dist
+build
+*.whl
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Frontend (not needed in backend images)
+node_modules
+frontend/dist
+frontend/node_modules
+frontend/.vite
+
+# Planning and documentation
+.planning
+.claude
+*.md
+!README.md
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# IDE and OS files
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Test coverage and reports
+.coverage
+htmlcov
+.tox
+coverage.xml
+
+# Temporary files
+*.log
+*.tmp
+nul

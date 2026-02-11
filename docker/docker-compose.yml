@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database with schema initialization
+  db:
+    image: postgres:15
+    container_name: iprs-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: iprs
+    ports:
+      - "5432:5432"
+    volumes:
+      # Mount SQL schema for database initialization
+      - ../sql/001_mvp_core.sql:/docker-entrypoint-initdb.d/001_mvp_core.sql:ro
+      # Persist database data (optional for development)
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d iprs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - iprs-network
+
+  # Market Data Service (Port 8001)
+  marketdata:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.marketdata
+    container_name: iprs-marketdata
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/iprs
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - iprs-network
+    restart: unless-stopped
+
+  # Run Orchestrator Service (Port 8002)
+  orchestrator:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.orchestrator
+    container_name: iprs-orchestrator
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/iprs
+      POSITIONS_SNAPSHOT_PATH: /app/demo/inputs/positions.json
+      RUN_TASK_HASH_MOD: "1"
+      RUN_TASK_MAX_ATTEMPTS: "3"
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - iprs-network
+    restart: unless-stopped
+
+  # Results API Service (Port 8003)
+  results:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.results
+    container_name: iprs-results
+    ports:
+      - "8003:8003"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/iprs
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - iprs-network
+    restart: unless-stopped
+
+  # Distributed Task Worker
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.worker
+    container_name: iprs-worker
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/iprs
+      WORKER_ID: worker-compose-1
+      WORKER_LEASE_SECONDS: "60"
+      WORKER_IDLE_SLEEP_SECONDS: "0.5"
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+      orchestrator:
+        condition: service_started
+    networks:
+      - iprs-network
+    restart: unless-stopped
+
+# Named volume for PostgreSQL data persistence
+volumes:
+  postgres_data:
+    driver: local
+
+# Shared network for service-to-service communication
+networks:
+  iprs-network:
+    driver: bridge

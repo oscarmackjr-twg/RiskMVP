@@ -1,0 +1,51 @@
+# Stage 1: Builder - Install dependencies
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Copy pyproject.toml for dependency resolution
+COPY pyproject.toml ./
+
+# Install build tools and create wheels for all dependencies
+RUN pip install --no-cache-dir build && \
+    pip wheel --no-cache-dir --wheel-dir /wheels \
+    fastapi \
+    uvicorn[standard] \
+    psycopg[binary] \
+    pydantic \
+    pydantic-settings
+
+# Stage 2: Runtime - Minimal production image
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy wheels from builder and install
+COPY --from=builder /wheels /wheels
+RUN pip install --no-cache-dir /wheels/*.whl && rm -rf /wheels
+
+# Copy application code (shared libraries and service-specific code)
+COPY shared/ ./shared/
+COPY services/common/ ./services/common/
+COPY services/run_orchestrator/ ./services/run_orchestrator/
+
+# Copy demo data for positions file access
+COPY demo/ ./demo/
+
+# Environment configuration
+ENV DATABASE_URL="postgresql://postgres:postgres@db:5432/iprs"
+ENV POSITIONS_SNAPSHOT_PATH="/app/demo/inputs/positions.json"
+ENV RUN_TASK_HASH_MOD="1"
+ENV RUN_TASK_MAX_ATTEMPTS="3"
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8002/health').read()" || exit 1
+
+# Expose service port
+EXPOSE 8002
+
+# Run service
+CMD ["uvicorn", "services.run_orchestrator.app.main:app", "--host", "0.0.0.0", "--port", "8002"]
