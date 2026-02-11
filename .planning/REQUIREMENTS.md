@@ -129,65 +129,76 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLAT-01 | — | Pending |
-| PLAT-02 | — | Pending |
-| PLAT-03 | — | Pending |
-| PLAT-04 | — | Pending |
-| PLAT-05 | — | Pending |
-| PLAT-06 | — | Pending |
-| PRICE-01 | — | Pending |
-| PRICE-02 | — | Pending |
-| PRICE-03 | — | Pending |
-| PRICE-04 | — | Pending |
-| PRICE-05 | — | Pending |
-| PRICE-06 | — | Pending |
-| PRICE-07 | — | Pending |
-| PRICE-08 | — | Pending |
-| PRICE-09 | — | Pending |
-| PORT-01 | — | Pending |
-| PORT-02 | — | Pending |
-| PORT-03 | — | Pending |
-| PORT-04 | — | Pending |
-| PORT-05 | — | Pending |
-| PORT-06 | — | Pending |
-| PORT-07 | — | Pending |
-| PORT-08 | — | Pending |
-| CF-01 | — | Pending |
-| CF-02 | — | Pending |
-| CF-03 | — | Pending |
-| CF-04 | — | Pending |
-| CF-05 | — | Pending |
-| CF-06 | — | Pending |
-| RISK-01 | — | Pending |
-| RISK-02 | — | Pending |
-| RISK-03 | — | Pending |
-| RISK-04 | — | Pending |
-| RISK-05 | — | Pending |
-| RISK-06 | — | Pending |
-| RISK-07 | — | Pending |
-| SCEN-01 | — | Pending |
-| SCEN-02 | — | Pending |
-| SCEN-03 | — | Pending |
-| SCEN-04 | — | Pending |
-| REG-01 | — | Pending |
-| REG-02 | — | Pending |
-| REG-03 | — | Pending |
-| REG-04 | — | Pending |
-| REG-05 | — | Pending |
-| DATA-01 | — | Pending |
-| DATA-02 | — | Pending |
-| DATA-03 | — | Pending |
-| DATA-04 | — | Pending |
-| RPT-01 | — | Pending |
-| RPT-02 | — | Pending |
-| RPT-03 | — | Pending |
-| RPT-04 | — | Pending |
+| PLAT-01 | Phase 1 | Pending |
+| PLAT-02 | Phase 1 | Pending |
+| PLAT-03 | Phase 1 | Pending |
+| PLAT-04 | Phase 1 | Pending |
+| PLAT-05 | Phase 1 | Pending |
+| PLAT-06 | Phase 1 | Pending |
+| PRICE-01 | Phase 2 | Pending |
+| PRICE-02 | Phase 2 | Pending |
+| PRICE-03 | Phase 2 | Pending |
+| PRICE-04 | Phase 2 | Pending |
+| PRICE-05 | Phase 2 | Pending |
+| PRICE-06 | Phase 2 | Pending |
+| PRICE-07 | Phase 2 | Pending |
+| PRICE-08 | Phase 2 | Pending |
+| PRICE-09 | Phase 2 | Pending |
+| PORT-01 | Phase 3 | Pending |
+| PORT-02 | Phase 3 | Pending |
+| PORT-03 | Phase 3 | Pending |
+| PORT-04 | Phase 3 | Pending |
+| PORT-05 | Phase 3 | Pending |
+| PORT-06 | Phase 3 | Pending |
+| PORT-07 | Phase 3 | Pending |
+| PORT-08 | Phase 3 | Pending |
+| CF-01 | Phase 2 | Pending |
+| CF-02 | Phase 2 | Pending |
+| CF-03 | Phase 2 | Pending |
+| CF-04 | Phase 2 | Pending |
+| CF-05 | Phase 2 | Pending |
+| CF-06 | Phase 2 | Pending |
+| RISK-01 | Phase 2 | Pending |
+| RISK-02 | Phase 2 | Pending |
+| RISK-03 | Phase 2 | Pending |
+| RISK-04 | Phase 2 | Pending |
+| RISK-05 | Phase 2 | Pending |
+| RISK-06 | Phase 2 | Pending |
+| RISK-07 | Phase 2 | Pending |
+| SCEN-01 | Phase 2 | Pending |
+| SCEN-02 | Phase 2 | Pending |
+| SCEN-03 | Phase 2 | Pending |
+| SCEN-04 | Phase 2 | Pending |
+| REG-01 | Phase 4 | Pending |
+| REG-02 | Phase 4 | Pending |
+| REG-03 | Phase 4 | Pending |
+| REG-04 | Phase 4 | Pending |
+| REG-05 | Phase 4 | Pending |
+| DATA-01 | Phase 3 | Pending |
+| DATA-02 | Phase 3 | Pending |
+| DATA-03 | Phase 3 | Pending |
+| DATA-04 | Phase 3 | Pending |
+| RPT-01 | Phase 4 | Pending |
+| RPT-02 | Phase 4 | Pending |
+| RPT-03 | Phase 4 | Pending |
+| RPT-04 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 49 total
-- Mapped to phases: 0
-- Unmapped: 49
+- Mapped to phases: 49
+- Unmapped: 0
+
+### Coverage by Phase
+
+| Phase | Requirements | Count |
+|-------|--------------|-------|
+| Phase 1 - Foundation & Infrastructure | PLAT-01 through PLAT-06 | 6 |
+| Phase 2 - Core Compute Engines | PRICE-01 through PRICE-09, CF-01 through CF-06, RISK-01 through RISK-07, SCEN-01 through SCEN-04 | 26 |
+| Phase 3 - Portfolio & Data Services | PORT-01 through PORT-08, DATA-01 through DATA-04 | 12 |
+| Phase 4 - Regulatory Analytics & Reporting | REG-01 through REG-05, RPT-01 through RPT-04 | 9 |
+| **TOTAL** | | **49** |
 
 ---
+
 *Requirements defined: 2026-02-11*
-*Last updated: 2026-02-11 after initial definition*
+*Traceability updated: 2026-02-11 after roadmap creation*
