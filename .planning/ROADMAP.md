@@ -1,9 +1,10 @@
+---
 # ROADMAP: IPRS Institutional Portfolio Analytics Platform
 
 **Version:** 1.0
 **Created:** 2026-02-11
 **Depth:** Quick (4 phases)
-**Status:** Phase 1 Complete
+**Status:** Phase 1 Complete, Phase 2 Planned
 
 ---
 
@@ -83,41 +84,53 @@ Plans:
 
 **Why Here:** Phase 1 infrastructure is prerequisite. This phase builds the analytics engines that drive all downstream value. Research flags this as critical: "don't build services before compute is done."
 
+**Plans:** 8 plans in 3 waves
+
+Plans:
+- [ ] 02-01-PLAN.md — QuantLib foundation (curve construction, day count, calendar) — Wave 1
+- [ ] 02-02-PLAN.md — Callable & putable bond pricers (TDD) — Wave 2
+- [ ] 02-03-PLAN.md — Floating-rate instrument pricer (TDD) — Wave 2
+- [ ] 02-04-PLAN.md — ABS/MBS pricer with prepayment modeling — Wave 2
+- [ ] 02-05-PLAN.md — Derivatives & structured product pricers — Wave 2
+- [ ] 02-06-PLAN.md — Cashflow modeling engine — Wave 2
+- [ ] 02-07-PLAN.md — Market risk analytics (duration, DV01, convexity, key rate) — Wave 3
+- [ ] 02-08-PLAN.md — Credit/liquidity risk, VaR/ES, Monte Carlo, scenario service — Wave 3
+
 ### Requirements Mapped
 
 **Pricing & Valuation (9 requirements):**
-- **PRICE-01**: Floating-rate instrument pricer
-- **PRICE-02**: Callable bond pricer with OAS
-- **PRICE-03**: Putable bond pricer
-- **PRICE-04**: ABS/MBS pricer with prepayment models
-- **PRICE-05**: Structured product pricer
-- **PRICE-06**: Derivatives hedge pricer
-- **PRICE-07**: Full curve construction (multi-curve, bootstrap, interpolation methods)
-- **PRICE-08**: Day count conventions (ACT/360, ACT/365, 30/360) and business day calendar
-- **PRICE-09**: Measures: Clean/Dirty price, YTM, YTC/YTP, OAS, Z-spread, DM, Par spread
+- **PRICE-01**: Floating-rate instrument pricer (Plan 02-03)
+- **PRICE-02**: Callable bond pricer with OAS (Plan 02-02)
+- **PRICE-03**: Putable bond pricer (Plan 02-02)
+- **PRICE-04**: ABS/MBS pricer with prepayment models (Plan 02-04)
+- **PRICE-05**: Structured product pricer (Plan 02-05)
+- **PRICE-06**: Derivatives hedge pricer (Plan 02-05)
+- **PRICE-07**: Full curve construction (multi-curve, bootstrap, interpolation methods) (Plan 02-01)
+- **PRICE-08**: Day count conventions (ACT/360, ACT/365, 30/360) and business day calendar (Plan 02-01)
+- **PRICE-09**: Measures: Clean/Dirty price, YTM, YTC/YTP, OAS, Z-spread, DM, Par spread (Plans 02-02, 02-03)
 
 **Cash Flow Modeling (6 requirements):**
-- **CF-01**: Payment schedule generation (level pay, bullet, custom amortization)
-- **CF-02**: Prepayment modeling (CPR, PSA speeds)
-- **CF-03**: Default and recovery modeling (LGD, EAD)
-- **CF-04**: Adjustable rate reset logic
-- **CF-05**: Scenario cash flow projection
-- **CF-06**: Waterfall modeling for structured products
+- **CF-01**: Payment schedule generation (level pay, bullet, custom amortization) (Plan 02-06)
+- **CF-02**: Prepayment modeling (CPR, PSA speeds) (Plan 02-04)
+- **CF-03**: Default and recovery modeling (LGD, EAD) (Plan 02-04)
+- **CF-04**: Adjustable rate reset logic (Plan 02-03)
+- **CF-05**: Scenario cash flow projection (Plan 02-08)
+- **CF-06**: Waterfall modeling for structured products (Plan 02-05)
 
 **Risk Analytics (7 requirements):**
-- **RISK-01**: Duration calculations (Macaulay, Modified, Effective)
-- **RISK-02**: DV01/PV01 and Convexity
-- **RISK-03**: Key rate duration and Spread duration
-- **RISK-04**: VaR (Historical, Parametric) and Expected Shortfall
-- **RISK-05**: Credit risk: PD modeling, Expected loss, Unexpected loss
-- **RISK-06**: Rating migration tracking and Concentration monitoring
-- **RISK-07**: Liquidity risk: Bid/ask spread analytics, Time-to-liquidate, LCR
+- **RISK-01**: Duration calculations (Macaulay, Modified, Effective) (Plan 02-07)
+- **RISK-02**: DV01/PV01 and Convexity (Plan 02-07)
+- **RISK-03**: Key rate duration and Spread duration (Plan 02-07)
+- **RISK-04**: VaR (Historical, Parametric) and Expected Shortfall (Plan 02-08)
+- **RISK-05**: Credit risk: PD modeling, Expected loss, Unexpected loss (Plan 02-08)
+- **RISK-06**: Rating migration tracking and Concentration monitoring (Deferred to Phase 3)
+- **RISK-07**: Liquidity risk: Bid/ask spread analytics, Time-to-liquidate, LCR (Plan 02-08)
 
 **Scenario & Forecasting (4 requirements):**
-- **SCEN-01**: Scenario definition and management service (CRUD, scenario sets)
-- **SCEN-02**: Stress testing configuration (rate shocks, spread shocks, FX shocks)
-- **SCEN-03**: Monte Carlo simulation engine (interest rate paths, macro factors)
-- **SCEN-04**: What-if analysis and portfolio rebalancing simulation
+- **SCEN-01**: Scenario definition and management service (CRUD, scenario sets) (Plan 02-08)
+- **SCEN-02**: Stress testing configuration (rate shocks, spread shocks, FX shocks) (Plan 02-08)
+- **SCEN-03**: Monte Carlo simulation engine (interest rate paths, macro factors) (Plan 02-08)
+- **SCEN-04**: What-if analysis and portfolio rebalancing simulation (Plan 02-08)
 
 ### Dependencies
 
@@ -143,7 +156,7 @@ Plans:
 
 ### Acceptance Criteria
 
-- All 26 requirements delivered
+- All 26 requirements delivered (25 in Phase 2, 1 deferred to Phase 3: RISK-06)
 - 6 new pricers implemented and integrated into registry
 - Golden tests for each pricer pass (>80% code coverage for pricing module)
 - Worker processes 1000 positions × 10 scenarios in <10 minutes on single worker
@@ -289,7 +302,7 @@ Plans:
 | Pricing (PRICE) | 9 | Phase 2 |
 | Portfolio (PORT) | 8 | Phase 3 |
 | Cashflow (CF) | 6 | Phase 2 |
-| Risk (RISK) | 7 | Phase 2 |
+| Risk (RISK) | 7 | Phase 2 (6), Phase 3 (1) |
 | Scenario (SCEN) | 4 | Phase 2 |
 | Regulatory (REG) | 5 | Phase 4 |
 | Data (DATA) | 4 | Phase 3 |
@@ -318,9 +331,10 @@ Phase 1: Foundation & Infrastructure
 ## Next Steps
 
 1. **User Review:** Approve or request revisions to phase structure, success criteria, or requirement assignments
-2. **Phase 1 Planning:** Detailed task breakdown via `/gsd:plan-phase 1` after roadmap approval
+2. **Phase 2 Execution:** Begin with `/gsd:execute-phase 2` after roadmap approval
 3. **Estimate Effort:** Phase 1 ~3-4 weeks, Phase 2 ~4-5 weeks, Phase 3 ~3-4 weeks, Phase 4 ~3-4 weeks (with parallelization, total ~12-14 weeks)
 
 ---
 
 *Roadmap Version 1.0 created 2026-02-11 by GSD Roadmapper*
+*Phase 2 plans added 2026-02-11 by GSD Planner*
