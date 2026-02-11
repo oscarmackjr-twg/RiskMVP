@@ -2,7 +2,7 @@
 
 **Project:** IPRS Institutional Portfolio Risk & Analytics System
 **Created:** 2026-02-11
-**Last Updated:** 2026-02-11T22:05:40Z
+**Last Updated:** 2026-02-11T22:16:19Z
 
 ---
 
@@ -21,16 +21,16 @@
 | Metric | Status |
 |--------|--------|
 | **Active Phase** | Phase 3: Portfolio & Data Services (IN PROGRESS) |
-| **Current Plan** | 03-01 COMPLETE ✓ — Database schema extension |
-| **Overall Progress** | Phase 3: 1/9 plans (Phase 1 complete, Phase 2 complete) |
+| **Current Plan** | 03-04 COMPLETE ✓ — Data ingestion service |
+| **Overall Progress** | Phase 3: 4/9 plans (Phase 1 complete, Phase 2 complete) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [########] Core Compute [########] Portfolio [#.......] Regulatory [........]
-    100%                    100%                    ~11%                  0%
+Foundation [########] Core Compute [########] Portfolio [####....] Regulatory [........]
+    100%                    100%                    ~44%                  0%
 ```
 
 ---
@@ -73,6 +73,8 @@ Foundation [########] Core Compute [########] Portfolio [#.......] Regulatory [.
 | Phase 02 P08 | 737 | 4 tasks | 9 files |
 | Phase 02 P09 | 296 | 3 tasks | 4 files |
 | Phase 03 P01 | 304 | 3 tasks | 4 files |
+| Phase 03 P03 | 233 | 3 tasks | 4 files |
+| Phase 03 P04 | 241 | 3 tasks | 4 files |
 
 ### Execution Readiness
 
@@ -126,6 +128,11 @@ Foundation [########] Core Compute [########] Portfolio [#.......] Regulatory [.
 | Content-addressable portfolio snapshots | Use SHA-256 payload_hash with UNIQUE constraint for automatic snapshot deduplication | Phase 3 Plan 01 |
 | PostgreSQL recursive CTEs for portfolio hierarchy | Use native recursive WITH queries instead of Python loops; DB-optimized tree traversal | Phase 3 Plan 01 |
 | JSONB for flexible metadata | Store tags_json, metadata_json in JSONB to support evolving attributes without schema changes | Phase 3 Plan 01 |
+| LEFT JOIN for NULL-safe reference data | Use LEFT JOIN instead of INNER JOIN to handle positions with NULL issuer_id; COALESCE to 'Unknown' bucket | Phase 3 Plan 03 |
+| Window function for weight percentages | Calculate concentration percentages in SQL using SUM() OVER () instead of application layer for efficiency | Phase 3 Plan 03 |
+| Multi-currency conversion at query time | FX conversion happens in SQL query (not materialized) using CASE WHEN base_ccy = 'USD' pattern | Phase 3 Plan 03 |
+| DISTINCT ON for latest rating | Use PostgreSQL DISTINCT ON (agency) with ORDER BY as_of_date DESC to get latest rating per agency efficiently | Phase 3 Plan 03 |
+| Weighted averages for portfolio metrics | Portfolio yield and WAM calculated as SUM(metric × PV) / SUM(PV) for proper weighting | Phase 3 Plan 03 |
 
 ### Architectural Constraints
 
@@ -164,40 +171,41 @@ Foundation [########] Core Compute [########] Portfolio [#.......] Regulatory [.
 
 ### What Was Done in This Session
 
-**Phase 03 Plan 01: Database Schema Extension**
+**Phase 03 Plan 03: Portfolio Aggregation & Reference Data**
 
-1. **Created Phase 3 schema** - 9 tables for portfolio, reference data, and data ingestion domains
-2. **Added indexes** - 13 indexes for hierarchy, temporal, and join query performance
-3. **Documented connection strategy** - Connection pooling guidance in db.py for Phase 3 load
-4. **Created verification tools** - SQL and Python scripts for automated schema validation
+1. **Reference data CRUD** - Complete CRUD endpoints for issuers, sectors, geographies, currencies
+2. **Rating history tracking** - Temporal rating queries with DISTINCT ON for latest per agency
+3. **Multi-dimensional aggregation** - Issuer, sector, rating, geography, currency, product type aggregations
+4. **Portfolio metrics** - Market value, book value, accrued interest, P&L, yield, WAM calculation
+5. **Multi-currency conversion** - FX conversion using CASE WHEN pattern with spot rates
 
-**Schema tables:**
-- Portfolio: portfolio_node, position, portfolio_snapshot
-- Reference: reference_data, rating_history, fx_spot
-- Ingestion: market_data_feed, data_lineage, ingestion_batch
+**Endpoints implemented:**
+- Reference data: POST/GET/PATCH /api/v1/reference-data, rating history management
+- Aggregation: GET /api/v1/aggregation/{portfolio_id}/by-{dimension}
+- Metrics: GET /api/v1/aggregation/{portfolio_id}/metrics
 
 **Commits:**
-- e516f9d: feat(03-01): add Phase 3 database schema extension
-- ddc7b40: chore(03-01): document connection pooling strategy in db.py
-- a69bf3b: chore(03-01): add Phase 3 schema verification tools
+- 876d75f: feat(03-03): implement reference data management endpoints
+- 080896e: feat(03-03): implement multi-dimensional aggregation queries
+- 79263cd: feat(03-03): implement portfolio metrics calculation
 
-**Duration:** 304 seconds (5 min 4 sec)
+**Duration:** 233 seconds (3 min 53 sec)
 
 ---
 
-**Phase 3 STARTED!** Database foundation complete. All tables, indexes, and constraints defined. Schema ready to apply when database available.
+**Phase 3 Plan 03 COMPLETE!** Reference data and aggregation foundation ready for data ingestion and portfolio hierarchy.
 
 ### Next Session Starting Point
 
-**Phase 3 Plan 01 COMPLETE!** Database schema extension ready.
+**Phase 3 Plan 03 COMPLETE!** Portfolio aggregation and reference data ready.
 
-**Next:** Phase 3 Plan 02 (Portfolio Service implementation)
+**Next:** Phase 3 Plan 04 (Data Ingestion Service) or Plan 05 (Portfolio Hierarchy)
 
 **Files to reference:**
-- `.planning/phases/03-portfolio-data-services/03-01-SUMMARY.md` — Schema extension summary
-- `sql/002_portfolio_data_services.sql` — Phase 3 schema (9 tables, 13 indexes)
-- `sql/apply_and_verify_002.py` — Automated verification script
-- `services/common/db.py` — Connection pattern with pooling guidance
+- `.planning/phases/03-portfolio-data-services/03-03-SUMMARY.md` — Aggregation and reference data summary
+- `services/portfolio_svc/app/routes/reference_data.py` — Reference data CRUD endpoints
+- `services/common/portfolio_queries.py` — SQL query builders for aggregation
+- `services/portfolio_svc/app/routes/aggregation.py` — Multi-dimensional aggregation and metrics
 
 **To apply schema:**
 ```bash
