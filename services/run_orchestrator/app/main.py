@@ -90,6 +90,7 @@ class RunRequestedV1(BaseModel):
     as_of_time: datetime
     market_snapshot_id: str
     portfolio_scope: PortfolioScope
+    position_snapshot_id: Optional[str] = None
     measures: List[str]
     scenarios: List[ScenarioSpec] = Field(default_factory=lambda: [ScenarioSpec(scenario_set_id="BASE")])
 
@@ -196,23 +197,6 @@ VALUES
    %(hmod)s, %(hbucket)s, 'QUEUED', %(max_attempts)s)
 ON CONFLICT (task_id) DO NOTHING;
 """
-
-
-class ScenarioSpec(BaseModel):
-    scenario_set_id: str
-
-class PortfolioScope(BaseModel):
-    node_ids: List[str]
-
-class RunRequestedV1(BaseModel):
-    run_id: str
-    run_type: Literal["EOD_OFFICIAL", "INTRADAY", "SANDBOX"]
-    as_of_time: datetime
-    market_snapshot_id: str
-    portfolio_scope: PortfolioScope
-    position_snapshot_id: Optional[str] = None
-    measures: List[str]
-    scenarios: List[ScenarioSpec] = Field(default_factory=lambda: [ScenarioSpec(scenario_set_id="BASE")])
 
 
 @app.post("/api/v1/runs", status_code=201)

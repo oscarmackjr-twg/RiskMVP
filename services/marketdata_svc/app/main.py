@@ -8,28 +8,18 @@ from psycopg.types.json import Json
 from services.common.db import db_conn
 from services.common.hash import sha256_json
 from services.common.service_base import create_service_app
+from shared.models.market_data import CurveNode, Curve, FxSpot
 
 app = create_service_app(title="marketdata-svc", version="0.1.0")
 
-class CurveNode(BaseModel):
-    tenor: str
-    zero_rate: float
-
-class Curve(BaseModel):
-    curve_id: Literal["USD-OIS", "EUR-OIS", "LOAN-SPREAD", "FI-SPREAD"]
-    curve_type: Literal["DISCOUNT", "SPREAD"]
-    nodes: List[CurveNode]
-
-class FxSpot(BaseModel):
-    pair: str
-    spot: float
-    ts: datetime
-
 class Quality(BaseModel):
+    """Data quality metadata for market data snapshots."""
     dq_status: Literal["PASS", "WARN", "FAIL"]
     issues: List[str] = Field(default_factory=list)
 
+
 class MarketDataSnapshotV1(BaseModel):
+    """Market data snapshot request/response model."""
     snapshot_id: str
     as_of_time: datetime
     vendor: str
