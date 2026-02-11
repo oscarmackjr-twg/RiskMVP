@@ -121,7 +121,11 @@ def generate_schedule(
     """
     # Parse dates
     issue_date = _parse_date(instrument.get('issue_date', as_of_date))
-    maturity_date = _parse_date(instrument.get('maturity_date'))
+
+    if 'maturity_date' not in instrument or instrument['maturity_date'] is None:
+        raise ValueError("instrument must contain 'maturity_date' field")
+
+    maturity_date = _parse_date(instrument['maturity_date'])
 
     if end_date:
         termination_date = _parse_date(end_date)
@@ -170,8 +174,9 @@ def generate_schedule(
         raise ValueError(f"Failed to create QuantLib schedule: {e}")
 
     # Extract payment dates from QuantLib schedule
+    # Skip first date (issue date) and only include actual payment dates
     pay_dates = []
-    for i in range(len(ql_schedule)):
+    for i in range(1, len(ql_schedule)):  # Start from 1 to skip issue date
         ql_date = ql_schedule[i]
         py_date = _from_ql_date(ql_date)
         # Only include dates after as_of_date
