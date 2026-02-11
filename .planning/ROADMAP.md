@@ -172,6 +172,19 @@ Plans:
 
 **Why Here:** Phase 2 delivers compute results. Phase 3 builds portfolio domain and data ingestion, enabling Phase 4 analytics and reporting.
 
+**Plans:** 5 plans in 3 waves
+
+Plans:
+- [ ] 03-01-PLAN.md — Database schema extension (portfolio, reference data, lineage)
+- [ ] 03-02-PLAN.md — Portfolio hierarchy and position management
+- [ ] 03-03-PLAN.md — Reference data and aggregation queries
+- [ ] 03-04-PLAN.md — Data ingestion service (market feeds, loan servicing, lineage)
+- [ ] 03-05-PLAN.md — Multi-currency aggregation and portfolio snapshots
+
+**Goal:** Portfolio hierarchy, position management, reference data, and data ingestion pipelines. Independent query services for portfolio aggregation and analytics queries.
+
+**Why Here:** Phase 2 delivers compute results. Phase 3 builds portfolio domain and data ingestion, enabling Phase 4 analytics and reporting.
+
 ### Requirements Mapped
 
 **Portfolio Management (8 requirements):**
