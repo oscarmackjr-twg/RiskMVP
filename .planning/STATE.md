@@ -21,16 +21,16 @@
 | Metric | Status |
 |--------|--------|
 | **Active Phase** | Phase 3: Portfolio & Data Services (IN PROGRESS) |
-| **Current Plan** | 03-04 COMPLETE ✓ — Data ingestion service |
-| **Overall Progress** | Phase 3: 4/9 plans (Phase 1 complete, Phase 2 complete) |
+| **Current Plan** | 03-05 COMPLETE ✓ — Portfolio snapshots & concentration monitoring |
+| **Overall Progress** | Phase 3: 5/9 plans (Phase 1 complete, Phase 2 complete) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [########] Core Compute [########] Portfolio [####....] Regulatory [........]
-    100%                    100%                    ~44%                  0%
+Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [........]
+    100%                    100%                    ~56%                  0%
 ```
 
 ---
@@ -75,6 +75,7 @@ Foundation [########] Core Compute [########] Portfolio [####....] Regulatory [.
 | Phase 03 P01 | 304 | 3 tasks | 4 files |
 | Phase 03 P03 | 233 | 3 tasks | 4 files |
 | Phase 03 P04 | 241 | 3 tasks | 4 files |
+| Phase 03 P05 | 227 | 3 tasks | 4 files |
 
 ### Execution Readiness
 
@@ -133,6 +134,10 @@ Foundation [########] Core Compute [########] Portfolio [####....] Regulatory [.
 | Multi-currency conversion at query time | FX conversion happens in SQL query (not materialized) using CASE WHEN base_ccy = 'USD' pattern | Phase 3 Plan 03 |
 | DISTINCT ON for latest rating | Use PostgreSQL DISTINCT ON (agency) with ORDER BY as_of_date DESC to get latest rating per agency efficiently | Phase 3 Plan 03 |
 | Weighted averages for portfolio metrics | Portfolio yield and WAM calculated as SUM(metric × PV) / SUM(PV) for proper weighting | Phase 3 Plan 03 |
+| Content-addressable snapshot deduplication | SHA-256 hash of payload JSON with UNIQUE constraint on (portfolio_node_id, payload_hash) prevents duplicate snapshots | Phase 3 Plan 05 |
+| Herfindahl index for concentration risk | H = Σ(wi²) industry-standard metric; H=1 max concentration, H→0 diversified; diversification ratio = 1/sqrt(H) | Phase 3 Plan 05 |
+| FX conversion scoped to market snapshot | fx_spot JOIN filtered by snapshot_id from run.market_snapshot_id ensures consistent FX rates across all queries in same run | Phase 3 Plan 05 |
+| S&P rating scale for migration notches | 22-point numeric scale (AAA=21 to D=0) enables migration distance calculation and direction classification | Phase 3 Plan 05 |
 
 ### Architectural Constraints
 
@@ -197,25 +202,28 @@ Foundation [########] Core Compute [########] Portfolio [####....] Regulatory [.
 
 ### Next Session Starting Point
 
-**Phase 3 Plan 03 COMPLETE!** Portfolio aggregation and reference data ready.
+**Phase 3 Plan 05 COMPLETE!** Portfolio snapshots and concentration monitoring ready.
 
-**Next:** Phase 3 Plan 04 (Data Ingestion Service) or Plan 05 (Portfolio Hierarchy)
+**Next:** Phase 3 Plan 06 (remaining plans) or Phase 4 (Regulatory Analytics)
 
 **Files to reference:**
-- `.planning/phases/03-portfolio-data-services/03-03-SUMMARY.md` — Aggregation and reference data summary
-- `services/portfolio_svc/app/routes/reference_data.py` — Reference data CRUD endpoints
-- `services/common/portfolio_queries.py` — SQL query builders for aggregation
-- `services/portfolio_svc/app/routes/aggregation.py` — Multi-dimensional aggregation and metrics
+- `.planning/phases/03-portfolio-data-services/03-05-SUMMARY.md` — Snapshots and concentration summary
+- `services/portfolio_svc/app/routes/snapshots.py` — Snapshot CRUD and comparison endpoints
+- `services/portfolio_svc/app/routes/aggregation.py` — Concentration and rating migration endpoints
+- `services/common/portfolio_queries.py` — FX conversion helper function
 
-**To apply schema:**
+**To test snapshots:**
 ```bash
-python sql/apply_and_verify_002.py
+uvicorn services.portfolio_svc.app.main:app --reload --port 8004
+curl -X POST http://localhost:8004/api/v1/snapshots \
+  -H "Content-Type: application/json" \
+  -d '{"portfolio_node_id": "test-port-1", "as_of_date": "2026-02-12T00:00:00Z"}'
 ```
 
 **Git status:**
 - Main branch active
-- Phase 3 started: 1/9 plans complete
-- Ready to build Portfolio Service (Plan 02)
+- Phase 3: 5/9 plans complete
+- Phase 3 requirements: PORT-01 through PORT-08, DATA-01 through DATA-04, RISK-06 all delivered
 
 ---
 
@@ -236,3 +244,61 @@ python sql/apply_and_verify_002.py
 ---
 
 *STATE.md created 2026-02-11 during roadmap phase*
+
+---
+
+## Phase 03 Plan 04 Execution Complete
+
+**Plan:** Data Ingestion Service
+**Completed:** 2026-02-11T22:13:40Z
+**Duration:** 241 seconds (4 min 1 sec)
+
+### Decisions Made
+- FX spots as first-class endpoints tied to snapshot_id for multi-currency aggregation
+- UPSERT idempotency with content-addressable hashing for market feed deduplication
+- Foreign key validation before batch insert to fail fast on invalid references
+
+### Files Created
+- services/data_ingestion_svc/app/routes/market_feeds.py (433 lines)
+- services/data_ingestion_svc/app/routes/loan_servicing.py (247 lines)
+- services/data_ingestion_svc/app/routes/lineage.py (313 lines)
+- services/data_ingestion_svc/app/models.py (FX, lineage, batch models)
+
+### Commits
+- 4eff10f: market data feed ingestion with FX spots and lineage
+- a047922: loan servicing batch ingestion with validation
+- ac539fb: data lineage query endpoints
+
+---
+
+## Phase 03 Plan 05 Execution Complete
+
+**Plan:** Portfolio Snapshots & Concentration Monitoring
+**Completed:** 2026-02-12T02:43:02Z
+**Duration:** 227 seconds (3 min 47 sec)
+
+### Decisions Made
+- Content-addressable snapshot deduplication with SHA-256 payload hash
+- Recursive CTE for hierarchical portfolio snapshot aggregation
+- Herfindahl index for concentration measurement (H = Σ(wi²))
+- S&P rating scale for migration notch calculation (AAA=21 to D=0)
+- FX conversion at query time with snapshot-scoped fx_spot JOIN
+
+### Files Created
+- services/portfolio_svc/app/models.py (270 lines: SnapshotCreate, SnapshotOut, ConcentrationReport, RatingMigrationReport)
+- services/portfolio_svc/app/routes/snapshots.py (374 lines: snapshot CRUD, comparison, time-series)
+
+### Files Modified
+- services/common/portfolio_queries.py (added get_fx_snapshot_for_run helper)
+- services/portfolio_svc/app/routes/aggregation.py (added concentration and rating-migration endpoints)
+
+### Commits
+- fb16f77: snapshot creation with deduplication
+- 4c07052: concentration monitoring and FX conversion integration
+
+### Requirements Completed
+- PORT-07: Multi-currency aggregation with snapshot-scoped FX conversion
+- PORT-08: Portfolio snapshots with content-addressable deduplication
+- RISK-06: Concentration monitoring (issuer, sector, geography, single-name) with Herfindahl index and rating migration tracking
+
+**Phase 3 Status:** 5/9 plans complete (PORT-01 through PORT-08, DATA-01 through DATA-04, RISK-06 all delivered)
