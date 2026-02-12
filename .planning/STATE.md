@@ -20,17 +20,17 @@
 
 | Metric | Status |
 |--------|--------|
-| **Active Phase** | Phase 3: Portfolio & Data Services (IN PROGRESS) |
-| **Current Plan** | 03-05 COMPLETE ✓ — Portfolio snapshots & concentration monitoring |
-| **Overall Progress** | Phase 3: 5/9 plans (Phase 1 complete, Phase 2 complete) |
+| **Active Phase** | Phase 4: Regulatory Analytics & Reporting (IN PROGRESS) |
+| **Current Plan** | 04-01 COMPLETE ✓ — Regulatory analytics schema extension |
+| **Overall Progress** | Phase 4: 1/6 plans (Phase 1 complete, Phase 2 complete, Phase 3 5/9) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [........]
-    100%                    100%                    ~56%                  0%
+Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [#.......]
+    100%                    100%                    ~56%                  ~17%
 ```
 
 ---
@@ -76,6 +76,7 @@ Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [.
 | Phase 03 P03 | 233 | 3 tasks | 4 files |
 | Phase 03 P04 | 241 | 3 tasks | 4 files |
 | Phase 03 P05 | 227 | 3 tasks | 4 files |
+| Phase 04 P01 | 175 | 3 tasks | 3 files |
 
 ### Execution Readiness
 
@@ -138,6 +139,9 @@ Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [.
 | Herfindahl index for concentration risk | H = Σ(wi²) industry-standard metric; H=1 max concentration, H→0 diversified; diversification ratio = 1/sqrt(H) | Phase 3 Plan 05 |
 | FX conversion scoped to market snapshot | fx_spot JOIN filtered by snapshot_id from run.market_snapshot_id ensures consistent FX rates across all queries in same run | Phase 3 Plan 05 |
 | S&P rating scale for migration notches | 22-point numeric scale (AAA=21 to D=0) enables migration distance calculation and direction classification | Phase 3 Plan 05 |
+| Trigger-based audit trail immutability | PostgreSQL trigger prevent_audit_modification() blocks all UPDATE/DELETE on audit_trail to ensure regulatory compliance | Phase 4 Plan 01 |
+| Temporal regulatory reference data | (ref_type, entity_key, effective_date DESC) index pattern enables point-in-time lookups for risk weights, PD curves, LGD tables | Phase 4 Plan 01 |
+| UPSERT idempotency for regulatory metrics | UNIQUE constraint on (portfolio_node_id, metric_type, as_of_date) enables ON CONFLICT DO UPDATE for regulatory_metrics caching | Phase 4 Plan 01 |
 
 ### Architectural Constraints
 
@@ -176,54 +180,57 @@ Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [.
 
 ### What Was Done in This Session
 
-**Phase 03 Plan 03: Portfolio Aggregation & Reference Data**
+**Phase 04 Plan 01: Regulatory Analytics Schema Extension**
 
-1. **Reference data CRUD** - Complete CRUD endpoints for issuers, sectors, geographies, currencies
-2. **Rating history tracking** - Temporal rating queries with DISTINCT ON for latest per agency
-3. **Multi-dimensional aggregation** - Issuer, sector, rating, geography, currency, product type aggregations
-4. **Portfolio metrics** - Market value, book value, accrued interest, P&L, yield, WAM calculation
-5. **Multi-currency conversion** - FX conversion using CASE WHEN pattern with spot rates
+1. **6 regulatory tables created** - audit_trail, regulatory_reference, model_governance, alert_config, alert_log, regulatory_metrics
+2. **Immutability enforcement** - PostgreSQL trigger prevents UPDATE/DELETE on audit_trail
+3. **Temporal indexes** - Point-in-time queries for regulatory reference data with effective_date DESC
+4. **Verification tooling** - SQL queries and Python script with 5 automated verification checks
 
-**Endpoints implemented:**
-- Reference data: POST/GET/PATCH /api/v1/reference-data, rating history management
-- Aggregation: GET /api/v1/aggregation/{portfolio_id}/by-{dimension}
-- Metrics: GET /api/v1/aggregation/{portfolio_id}/metrics
+**Tables implemented:**
+- audit_trail: Immutable log for GAAP, IFRS, CECL, Basel calculations
+- regulatory_reference: Risk weights, PD curves, LGD tables with versioning
+- model_governance: Model version tracking with backtesting results
+- alert_config/alert_log: Threshold-based monitoring infrastructure
+- regulatory_metrics: Cached regulatory calculations with UPSERT idempotency
 
 **Commits:**
-- 876d75f: feat(03-03): implement reference data management endpoints
-- 080896e: feat(03-03): implement multi-dimensional aggregation queries
-- 79263cd: feat(03-03): implement portfolio metrics calculation
+- aa134e2: feat(04-01): create regulatory analytics schema with 6 tables
+- 2c91151: feat(04-01): add schema verification tools for regulatory analytics
 
-**Duration:** 233 seconds (3 min 53 sec)
+**Duration:** 175 seconds (2 min 55 sec)
 
 ---
 
-**Phase 3 Plan 03 COMPLETE!** Reference data and aggregation foundation ready for data ingestion and portfolio hierarchy.
+**Phase 4 Plan 01 COMPLETE!** Regulatory analytics schema ready for CECL, Basel, and alerting services.
 
 ### Next Session Starting Point
 
-**Phase 3 Plan 05 COMPLETE!** Portfolio snapshots and concentration monitoring ready.
+**Phase 4 Plan 01 COMPLETE!** Regulatory analytics schema extension ready.
 
-**Next:** Phase 3 Plan 06 (remaining plans) or Phase 4 (Regulatory Analytics)
+**Next:** Phase 4 Plan 02 (CECL Calculations) or Phase 3 remaining plans
 
 **Files to reference:**
-- `.planning/phases/03-portfolio-data-services/03-05-SUMMARY.md` — Snapshots and concentration summary
-- `services/portfolio_svc/app/routes/snapshots.py` — Snapshot CRUD and comparison endpoints
-- `services/portfolio_svc/app/routes/aggregation.py` — Concentration and rating migration endpoints
-- `services/common/portfolio_queries.py` — FX conversion helper function
+- `.planning/phases/04-regulatory-analytics-reporting/04-01-SUMMARY.md` — Regulatory schema extension summary
+- `sql/003_regulatory_analytics.sql` — 6 regulatory tables with indexes and triggers
+- `sql/verify_003_schema.sql` — Manual verification queries
+- `sql/apply_and_verify_003.py` — Automated migration and verification
 
-**To test snapshots:**
+**To apply schema:**
 ```bash
-uvicorn services.portfolio_svc.app.main:app --reload --port 8004
-curl -X POST http://localhost:8004/api/v1/snapshots \
-  -H "Content-Type: application/json" \
-  -d '{"portfolio_node_id": "test-port-1", "as_of_date": "2026-02-12T00:00:00Z"}'
+# Set DATABASE_URL environment variable
+export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/iprs"
+
+# Run automated application and verification
+python sql/apply_and_verify_003.py
+
+# Expected output: All 5 verification checks pass
 ```
 
 **Git status:**
 - Main branch active
-- Phase 3: 5/9 plans complete
-- Phase 3 requirements: PORT-01 through PORT-08, DATA-01 through DATA-04, RISK-06 all delivered
+- Phase 4: 1/6 plans complete
+- Phase 4 Plan 01: REG-01 (audit trail), REG-05 (model governance), RPT-04 (alerting) schema delivered
 
 ---
 
@@ -302,3 +309,33 @@ curl -X POST http://localhost:8004/api/v1/snapshots \
 - RISK-06: Concentration monitoring (issuer, sector, geography, single-name) with Herfindahl index and rating migration tracking
 
 **Phase 3 Status:** 5/9 plans complete (PORT-01 through PORT-08, DATA-01 through DATA-04, RISK-06 all delivered)
+
+---
+
+## Phase 04 Plan 01 Execution Complete
+
+**Plan:** Regulatory Analytics Schema Extension
+**Completed:** 2026-02-12T02:57:54Z
+**Duration:** 175 seconds (2 min 55 sec)
+
+### Decisions Made
+- Trigger-based immutability: prevent_audit_modification() blocks UPDATE/DELETE on audit_trail
+- Temporal regulatory reference data: (ref_type, entity_key, effective_date DESC) index pattern
+- UPSERT idempotency: UNIQUE constraint on (portfolio_node_id, metric_type, as_of_date) for regulatory_metrics
+- CHECK constraints for enum validation at database layer
+
+### Files Created
+- sql/003_regulatory_analytics.sql (161 lines: 6 tables, 10 indexes, 1 trigger)
+- sql/verify_003_schema.sql (220 lines: manual verification queries)
+- sql/apply_and_verify_003.py (387 lines: automated verification)
+
+### Commits
+- aa134e2: feat(04-01): create regulatory analytics schema with 6 tables
+- 2c91151: feat(04-01): add schema verification tools for regulatory analytics
+
+### Requirements Completed
+- REG-01 (partial): Audit trail schema ready for CECL/Basel calculations
+- REG-05 (partial): Model governance schema ready for version tracking
+- RPT-04 (partial): Alert config and log schema ready for threshold monitoring
+
+**Phase 4 Status:** 1/6 plans complete (regulatory schema foundation delivered)
