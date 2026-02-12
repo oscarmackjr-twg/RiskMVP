@@ -71,6 +71,11 @@ output "ecr_repository_urls" {
     orchestrator = aws_ecr_repository.orchestrator.repository_url
     results      = aws_ecr_repository.results.repository_url
     worker       = aws_ecr_repository.worker.repository_url
+    portfolio    = aws_ecr_repository.portfolio.repository_url
+    risk         = aws_ecr_repository.risk.repository_url
+    regulatory   = aws_ecr_repository.regulatory.repository_url
+    ingestion    = aws_ecr_repository.ingestion.repository_url
+    frontend     = aws_ecr_repository.frontend.repository_url
   }
 }
 

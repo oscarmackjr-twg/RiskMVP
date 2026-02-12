@@ -528,3 +528,479 @@ resource "aws_ecs_service" "worker" {
     Service = "worker"
   }
 }
+
+# ============================================================
+# Phase 2+ Services: Portfolio, Risk, Regulatory, Ingestion
+# ============================================================
+
+# Task Definition - Portfolio Service
+resource "aws_ecs_task_definition" "portfolio" {
+  family                   = "${var.project_name}-portfolio-${var.environment}"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "portfolio"
+      image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_repository.portfolio.name}:latest"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8005
+          protocol      = "tcp"
+        }
+      ]
+      environment = [
+        {
+          name  = "DATABASE_URL"
+          value = "postgresql://${var.db_master_username}:${var.db_master_password}@${aws_db_proxy.main.endpoint}:5432/${var.db_name}"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-stream-prefix" = "portfolio"
+        }
+      }
+    }
+  ])
+
+  tags = {
+    Name    = "${var.project_name}-portfolio-task-${var.environment}"
+    Service = "portfolio"
+  }
+}
+
+# Task Definition - Risk Service
+resource "aws_ecs_task_definition" "risk" {
+  family                   = "${var.project_name}-risk-${var.environment}"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "risk"
+      image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_repository.risk.name}:latest"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8006
+          protocol      = "tcp"
+        }
+      ]
+      environment = [
+        {
+          name  = "DATABASE_URL"
+          value = "postgresql://${var.db_master_username}:${var.db_master_password}@${aws_db_proxy.main.endpoint}:5432/${var.db_name}"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-stream-prefix" = "risk"
+        }
+      }
+    }
+  ])
+
+  tags = {
+    Name    = "${var.project_name}-risk-task-${var.environment}"
+    Service = "risk"
+  }
+}
+
+# Task Definition - Regulatory Service
+resource "aws_ecs_task_definition" "regulatory" {
+  family                   = "${var.project_name}-regulatory-${var.environment}"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "regulatory"
+      image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_repository.regulatory.name}:latest"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8007
+          protocol      = "tcp"
+        }
+      ]
+      environment = [
+        {
+          name  = "DATABASE_URL"
+          value = "postgresql://${var.db_master_username}:${var.db_master_password}@${aws_db_proxy.main.endpoint}:5432/${var.db_name}"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-stream-prefix" = "regulatory"
+        }
+      }
+    }
+  ])
+
+  tags = {
+    Name    = "${var.project_name}-regulatory-task-${var.environment}"
+    Service = "regulatory"
+  }
+}
+
+# Task Definition - Ingestion Service
+resource "aws_ecs_task_definition" "ingestion" {
+  family                   = "${var.project_name}-ingestion-${var.environment}"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "ingestion"
+      image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_repository.ingestion.name}:latest"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8008
+          protocol      = "tcp"
+        }
+      ]
+      environment = [
+        {
+          name  = "DATABASE_URL"
+          value = "postgresql://${var.db_master_username}:${var.db_master_password}@${aws_db_proxy.main.endpoint}:5432/${var.db_name}"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-stream-prefix" = "ingestion"
+        }
+      }
+    }
+  ])
+
+  tags = {
+    Name    = "${var.project_name}-ingestion-task-${var.environment}"
+    Service = "ingestion"
+  }
+}
+
+# Target Group - Portfolio
+resource "aws_lb_target_group" "portfolio" {
+  name        = "${var.project_name}-port-tg-${var.environment}"
+  port        = 8005
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    path                = "/health"
+    matcher             = "200"
+  }
+
+  tags = {
+    Name    = "${var.project_name}-portfolio-tg-${var.environment}"
+    Service = "portfolio"
+  }
+}
+
+# Target Group - Risk
+resource "aws_lb_target_group" "risk" {
+  name        = "${var.project_name}-risk-tg-${var.environment}"
+  port        = 8006
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    path                = "/health"
+    matcher             = "200"
+  }
+
+  tags = {
+    Name    = "${var.project_name}-risk-tg-${var.environment}"
+    Service = "risk"
+  }
+}
+
+# Target Group - Regulatory
+resource "aws_lb_target_group" "regulatory" {
+  name        = "${var.project_name}-reg-tg-${var.environment}"
+  port        = 8007
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    path                = "/health"
+    matcher             = "200"
+  }
+
+  tags = {
+    Name    = "${var.project_name}-regulatory-tg-${var.environment}"
+    Service = "regulatory"
+  }
+}
+
+# Target Group - Ingestion
+resource "aws_lb_target_group" "ingestion" {
+  name        = "${var.project_name}-ing-tg-${var.environment}"
+  port        = 8008
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.main.id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    path                = "/health"
+    matcher             = "200"
+  }
+
+  tags = {
+    Name    = "${var.project_name}-ingestion-tg-${var.environment}"
+    Service = "ingestion"
+  }
+}
+
+# ALB Listener Rule - Portfolio
+resource "aws_lb_listener_rule" "portfolio" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 400
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.portfolio.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/portfolio/*"]
+    }
+  }
+
+  tags = {
+    Name    = "${var.project_name}-alb-rule-portfolio-${var.environment}"
+    Service = "portfolio"
+  }
+}
+
+# ALB Listener Rule - Risk
+resource "aws_lb_listener_rule" "risk" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 500
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.risk.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/risk/*"]
+    }
+  }
+
+  tags = {
+    Name    = "${var.project_name}-alb-rule-risk-${var.environment}"
+    Service = "risk"
+  }
+}
+
+# ALB Listener Rule - Regulatory
+resource "aws_lb_listener_rule" "regulatory" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 600
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.regulatory.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/regulatory/*"]
+    }
+  }
+
+  tags = {
+    Name    = "${var.project_name}-alb-rule-regulatory-${var.environment}"
+    Service = "regulatory"
+  }
+}
+
+# ALB Listener Rule - Ingestion
+resource "aws_lb_listener_rule" "ingestion" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 700
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.ingestion.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/ingestion/*"]
+    }
+  }
+
+  tags = {
+    Name    = "${var.project_name}-alb-rule-ingestion-${var.environment}"
+    Service = "ingestion"
+  }
+}
+
+# ECS Service - Portfolio
+resource "aws_ecs_service" "portfolio" {
+  name            = "${var.project_name}-portfolio-${var.environment}"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.portfolio.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.portfolio.arn
+    container_name   = "portfolio"
+    container_port   = 8005
+  }
+
+  depends_on = [aws_lb_listener.http]
+
+  tags = {
+    Name    = "${var.project_name}-portfolio-service-${var.environment}"
+    Service = "portfolio"
+  }
+}
+
+# ECS Service - Risk
+resource "aws_ecs_service" "risk" {
+  name            = "${var.project_name}-risk-${var.environment}"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.risk.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.risk.arn
+    container_name   = "risk"
+    container_port   = 8006
+  }
+
+  depends_on = [aws_lb_listener.http]
+
+  tags = {
+    Name    = "${var.project_name}-risk-service-${var.environment}"
+    Service = "risk"
+  }
+}
+
+# ECS Service - Regulatory
+resource "aws_ecs_service" "regulatory" {
+  name            = "${var.project_name}-regulatory-${var.environment}"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.regulatory.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.regulatory.arn
+    container_name   = "regulatory"
+    container_port   = 8007
+  }
+
+  depends_on = [aws_lb_listener.http]
+
+  tags = {
+    Name    = "${var.project_name}-regulatory-service-${var.environment}"
+    Service = "regulatory"
+  }
+}
+
+# ECS Service - Ingestion
+resource "aws_ecs_service" "ingestion" {
+  name            = "${var.project_name}-ingestion-${var.environment}"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.ingestion.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.ingestion.arn
+    container_name   = "ingestion"
+    container_port   = 8008
+  }
+
+  depends_on = [aws_lb_listener.http]
+
+  tags = {
+    Name    = "${var.project_name}-ingestion-service-${var.environment}"
+    Service = "ingestion"
+  }
+}

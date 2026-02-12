@@ -12,8 +12,10 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Mount SQL schema for database initialization
+      # Mount SQL schemas for database initialization (executed in alphabetical order)
       - ../sql/001_mvp_core.sql:/docker-entrypoint-initdb.d/001_mvp_core.sql:ro
+      - ../sql/002_portfolio_data_services.sql:/docker-entrypoint-initdb.d/002_portfolio_data_services.sql:ro
+      - ../sql/003_regulatory_analytics.sql:/docker-entrypoint-initdb.d/003_regulatory_analytics.sql:ro
       # Persist database data (optional for development)
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -99,6 +101,98 @@ services:
         condition: service_healthy
       orchestrator:
         condition: service_started
+    networks:
+      - iprs-network
+    restart: unless-stopped
+
+  # Portfolio Service (Port 8005)
+  portfolio:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.portfolio
+    container_name: iprs-portfolio
+    ports:
+      - "8005:8005"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/iprs
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - iprs-network
+    restart: unless-stopped
+
+  # Risk Service (Port 8006)
+  risk:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.risk
+    container_name: iprs-risk
+    ports:
+      - "8006:8006"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/iprs
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - iprs-network
+    restart: unless-stopped
+
+  # Regulatory Service (Port 8007)
+  regulatory:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.regulatory
+    container_name: iprs-regulatory
+    ports:
+      - "8007:8007"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/iprs
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - iprs-network
+    restart: unless-stopped
+
+  # Data Ingestion Service (Port 8008)
+  ingestion:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ingestion
+    container_name: iprs-ingestion
+    ports:
+      - "8008:8008"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/iprs
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - iprs-network
+    restart: unless-stopped
+
+  # React Frontend (Port 80) — nginx reverse proxy to all services
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    container_name: iprs-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - marketdata
+      - orchestrator
+      - results
+      - portfolio
+      - risk
+      - regulatory
+      - ingestion
     networks:
       - iprs-network
     restart: unless-stopped
