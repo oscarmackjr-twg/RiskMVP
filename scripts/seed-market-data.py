@@ -69,13 +69,24 @@ def fetch_fred_series(series_id: str, api_key: str) -> float | None:
     return None
 
 
+# Fallback FX rates (approximate) if Frankfurter is unreachable
+FALLBACK_FX_RATES = {
+    "EUR": 0.92, "GBP": 0.79, "JPY": 149.5,
+    "CHF": 0.88, "CAD": 1.36, "AUD": 1.54,
+}
+
+
 def fetch_fx_rates() -> dict[str, float]:
     """Fetch latest FX rates from Frankfurter (ECB reference rates, USD base)."""
     url = "https://api.frankfurter.app/latest"
     params = {"from": "USD", "to": ",".join(FX_CURRENCIES)}
-    resp = requests.get(url, params=params, timeout=15)
-    resp.raise_for_status()
-    return resp.json().get("rates", {})
+    try:
+        resp = requests.get(url, params=params, timeout=30)
+        resp.raise_for_status()
+        return resp.json().get("rates", {})
+    except (requests.exceptions.RequestException, Exception) as e:
+        print(f"  WARNING: Frankfurter API unavailable ({type(e).__name__}), using fallback FX rates")
+        return FALLBACK_FX_RATES
 
 
 def build_snapshot(

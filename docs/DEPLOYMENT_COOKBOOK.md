@@ -82,7 +82,7 @@ Expected output: 9 images built successfully (db, marketdata, orchestrator, resu
 #### 2. Start the stack
 
 ```bash
-docker compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 #### 3. Verify database is ready
