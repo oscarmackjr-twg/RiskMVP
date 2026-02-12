@@ -7,6 +7,7 @@ import RegulatoryPage from "./pages/RegulatoryPage";
 import AuditTrailPage from "./pages/AuditTrailPage";
 import ModelGovernancePage from "./pages/ModelGovernancePage";
 import ExportPage from "./pages/ExportPage";
+import AlertsPage from "./pages/AlertsPage";
 
 function TopNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -72,6 +73,14 @@ function TopNav() {
               }
             >
               Export
+            </NavLink>
+            <NavLink
+              to="/alerts"
+              className={({ isActive }) =>
+                `brutal-btn ${isActive ? 'bg-brutal-pink' : 'bg-brutal-yellow'}`
+              }
+            >
+              Alerts
             </NavLink>
           </nav>
 
@@ -154,6 +163,15 @@ function TopNav() {
             >
               Export
             </NavLink>
+            <NavLink
+              to="/alerts"
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `brutal-btn w-full ${isActive ? 'bg-brutal-pink' : 'bg-brutal-yellow'}`
+              }
+            >
+              Alerts
+            </NavLink>
           </nav>
         )}
       </div>
@@ -207,6 +225,7 @@ export default function App() {
             <Route path="/audit-trail" element={<AuditTrailPage />} />
             <Route path="/model-governance" element={<ModelGovernancePage />} />
             <Route path="/export" element={<ExportPage />} />
+            <Route path="/alerts" element={<AlertsPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>

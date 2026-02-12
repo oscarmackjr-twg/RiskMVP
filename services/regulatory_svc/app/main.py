@@ -9,6 +9,7 @@ from services.regulatory_svc.app.routes.accounting import router as accounting_r
 from services.regulatory_svc.app.routes.audit import router as audit_router
 from services.regulatory_svc.app.routes.model_governance import router as model_governance_router
 from services.regulatory_svc.app.routes.reports import router as reports_router
+from services.regulatory_svc.app.routes.alerts import router as alerts_router
 
 app = create_service_app(
     title="regulatory-svc",
@@ -21,3 +22,4 @@ app.include_router(accounting_router, prefix="/api/v1/regulatory/accounting", ta
 app.include_router(audit_router, prefix="/api/v1/regulatory/audit", tags=["Audit"])
 app.include_router(model_governance_router, prefix="/api/v1/regulatory/models", tags=["Model Governance"])
 app.include_router(reports_router, prefix="/api/v1/regulatory/reports", tags=["Reports"])
+app.include_router(alerts_router, prefix="/api/v1/regulatory/alerts", tags=["Alerts"])
