@@ -1,0 +1,2 @@
+"""Configuration management."""
+from shared.config.settings import BaseAppSettings
