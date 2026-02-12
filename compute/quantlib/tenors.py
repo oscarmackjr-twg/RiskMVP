@@ -1,5 +1,6 @@
 # compute/quantlib/tenors.py
 TENOR_YEARS = {
+    "ON": 1/365,
     "1W": 1/52,
     "1M": 1/12,
     "3M": 3/12,

@@ -35,26 +35,28 @@ def registered_types() -> List[str]:
 
 
 # Auto-register existing pricers on import
+# Uses try/except per pricer so that pricers with heavy dependencies (e.g. QuantLib)
+# don't prevent other pricers from registering when those dependencies are absent.
 def _bootstrap() -> None:
-    from compute.pricers.fx_fwd import price_fx_fwd
-    from compute.pricers.loan import price_loan
-    from compute.pricers.bond import price_bond
-    from compute.pricers.callable_bond import price_callable_bond
-    from compute.pricers.putable_bond import price_putable_bond
-    from compute.pricers.floating_rate import price_floating_rate
-    from compute.pricers.derivatives import price_derivatives
-    from compute.pricers.structured import price_structured
-    from compute.pricers.abs_mbs import price_abs_mbs
-
-    register("FX_FWD", price_fx_fwd)
-    register("AMORT_LOAN", price_loan)
-    register("FIXED_BOND", price_bond)
-    register("CALLABLE_BOND", price_callable_bond)
-    register("PUTABLE_BOND", price_putable_bond)
-    register("FLOATING_RATE", price_floating_rate)
-    register("DERIVATIVES", price_derivatives)
-    register("STRUCTURED", price_structured)
-    register("ABS_MBS", price_abs_mbs)
+    _pricers = [
+        ("FX_FWD", "compute.pricers.fx_fwd", "price_fx_fwd"),
+        ("AMORT_LOAN", "compute.pricers.loan", "price_loan"),
+        ("FIXED_BOND", "compute.pricers.bond", "price_bond"),
+        ("CALLABLE_BOND", "compute.pricers.callable_bond", "price_callable_bond"),
+        ("PUTABLE_BOND", "compute.pricers.putable_bond", "price_putable_bond"),
+        ("FLOATING_RATE", "compute.pricers.floating_rate", "price_floating_rate"),
+        ("DERIVATIVES", "compute.pricers.derivatives", "price_derivatives"),
+        ("STRUCTURED", "compute.pricers.structured", "price_structured"),
+        ("ABS_MBS", "compute.pricers.abs_mbs", "price_abs_mbs"),
+    ]
+    import importlib
+    for product_type, module_path, fn_name in _pricers:
+        try:
+            mod = importlib.import_module(module_path)
+            register(product_type, getattr(mod, fn_name))
+        except Exception as e:
+            import sys
+            print(f"[registry] skipping {product_type}: {e}", file=sys.stderr)
 
 
 _bootstrap()

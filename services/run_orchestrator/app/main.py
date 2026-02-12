@@ -214,22 +214,21 @@ def create_run(req: RunRequestedV1):
 
     # 2) Load/prepare a position snapshot payload for this run
     def _load_positions_by_id(psid: str) -> Dict[str, Any]:
-       with db_conn() as conn:
-        conn.row_factory = dict_row
-        row = conn.execute(
-            "SELECT payload_json FROM position_snapshot WHERE position_snapshot_id = %(psid)s",
-            {"psid": psid},
-        ).fetchone()
-        if not row:
-            raise HTTPException(status_code=400, detail=f"position_snapshot_id not found: {psid}")
-        return row["payload_json"]
+        with db_conn() as conn:
+            conn.row_factory = dict_row
+            row = conn.execute(
+                "SELECT payload_json FROM position_snapshot WHERE position_snapshot_id = %(psid)s",
+                {"psid": psid},
+            ).fetchone()
+            if not row:
+                raise HTTPException(status_code=400, detail=f"position_snapshot_id not found: {psid}")
+            return row["payload_json"]
 
-        # inside create_run(...)
-        if getattr(req, "position_snapshot_id", None):
-            payload = _load_positions_by_id(req.position_snapshot_id)
-        else:
+    if getattr(req, "position_snapshot_id", None):
+        payload = _load_positions_by_id(req.position_snapshot_id)
+    else:
         # fallback for legacy demo flow
-            payload = load_positions_payload()
+        payload = load_positions_payload()
 
     # Ensure payload has the expected shape the worker uses: payload["positions"]
     positions = payload.get("positions") or []
