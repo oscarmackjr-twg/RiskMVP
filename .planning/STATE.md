@@ -10,7 +10,7 @@
 
 **Core Value:** The risk team can run end-to-end portfolio analytics on their loan portfolio with institutional-grade reproducibility and audit trails.
 
-**Current Status:** Phase 1 Complete - Ready for Phase 2
+**Current Status:** All 4 Phases Complete - v1.0 Feature-Complete
 
 **Team:** Solo developer + Claude (orchestrator mode)
 
@@ -20,17 +20,17 @@
 
 | Metric | Status |
 |--------|--------|
-| **Active Phase** | Phase 4: Regulatory Analytics & Reporting (IN PROGRESS) |
-| **Current Plan** | 04-02 COMPLETE ✓ — Regulatory calculation modules |
-| **Overall Progress** | Phase 4: 2/6 plans (Phase 1 complete, Phase 2 complete, Phase 3 5/9) |
-| **Requirements Coverage** | 49/49 mapped (100%) |
+| **Active Phase** | ALL PHASES COMPLETE ✓ |
+| **Current Plan** | All 6 Phase 4 plans delivered |
+| **Overall Progress** | 4/4 phases complete, 49/49 requirements delivered |
+| **Requirements Coverage** | 49/49 delivered (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [##......]
-    100%                    100%                    ~56%                  ~33%
+Foundation [########] Core Compute [########] Portfolio [########] Regulatory [########]
+    100%                    100%                    100%                  100%
 ```
 
 ---
@@ -42,9 +42,9 @@ Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [#
 | Phase | Goal | Requirements | ETA |
 |-------|------|--------------|-----|
 | **1** ✓ | Foundation & Infrastructure | PLAT-01 through PLAT-06 | COMPLETE 2026-02-11 |
-| **2** | Core Compute Engines | PRICE-01 through SCEN-04 | Week 8-9 |
-| **3** | Portfolio & Data Services | PORT-01 through DATA-04 | Week 12-13 |
-| **4** | Regulatory Analytics & Reporting | REG-01 through RPT-04 | Week 15-16 |
+| **2** ✓ | Core Compute Engines | PRICE-01 through SCEN-04 | COMPLETE 2026-02-11 |
+| **3** ✓ | Portfolio & Data Services | PORT-01 through DATA-04 | COMPLETE 2026-02-12 |
+| **4** ✓ | Regulatory Analytics & Reporting | REG-01 through RPT-04 | COMPLETE 2026-02-12 |
 
 **Total Estimated Duration:** 12-14 weeks (with parallelization of Phases 2 and 3 after Phase 1)
 
@@ -212,31 +212,17 @@ Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [#
 
 ### Next Session Starting Point
 
-**Phase 4 Plan 01 COMPLETE!** Regulatory analytics schema extension ready.
+**ALL PHASES COMPLETE!** v1.0 milestone feature-complete with 49/49 requirements delivered.
 
-**Next:** Phase 4 Plan 02 (CECL Calculations) or Phase 3 remaining plans
+**Next:** `/gsd:complete-milestone` to archive v1.0 and plan v2.0
 
-**Files to reference:**
-- `.planning/phases/04-regulatory-analytics-reporting/04-01-SUMMARY.md` — Regulatory schema extension summary
-- `sql/003_regulatory_analytics.sql` — 6 regulatory tables with indexes and triggers
-- `sql/verify_003_schema.sql` — Manual verification queries
-- `sql/apply_and_verify_003.py` — Automated migration and verification
-
-**To apply schema:**
-```bash
-# Set DATABASE_URL environment variable
-export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/iprs"
-
-# Run automated application and verification
-python sql/apply_and_verify_003.py
-
-# Expected output: All 5 verification checks pass
-```
-
-**Git status:**
-- Main branch active
-- Phase 4: 1/6 plans complete
-- Phase 4 Plan 01: REG-01 (audit trail), REG-05 (model governance), RPT-04 (alerting) schema delivered
+**Phase 4 deliverables:**
+- `sql/003_regulatory_analytics.sql` — 6 regulatory tables
+- `compute/regulatory/` — CECL, Basel, GAAP/IFRS calculation modules (49 tests)
+- `services/regulatory_svc/` — 7 route modules (CECL, Basel, accounting, audit, model governance, reports, alerts)
+- `services/common/export.py` — CSV/Excel export utilities
+- `services/common/audit.py` — Shared audit trail logging
+- `frontend/src/pages/` — 5 new pages (Regulatory, AuditTrail, ModelGovernance, Export, Alerts)
 
 ---
 

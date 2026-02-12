@@ -4,7 +4,7 @@
 **Version:** 1.0
 **Created:** 2026-02-11
 **Depth:** Quick (4 phases)
-**Status:** Phase 1 Complete, Phase 2 Complete, Phase 3 Complete, Phase 4 Planned
+**Status:** Phase 1 Complete, Phase 2 Complete, Phase 3 Complete, Phase 4 Complete
 
 ---
 
@@ -21,7 +21,7 @@ Expanding the Risk MVP from a working prototype into an institutional-grade port
 | **1 - Foundation & Infrastructure** ✓ | Platform skeleton ready; compute engine refactored with registry pattern; database schema extended for full analytics pipeline | PLAT-01 through PLAT-06 | 6/6 verified | 5 plans ✓ |
 | **2 - Core Compute Engines** ✓ | Institutional-grade pricers, cashflow generation, risk analytics, and scenario execution; worker processes full pipeline end-to-end | PRICE-01 through PRICE-09, CF-01 through CF-06, RISK-01 through RISK-07, SCEN-01 through SCEN-04 | 8/8 verified | 9 plans ✓ |
 | **3 - Portfolio & Data Services** ✓ | Portfolio hierarchy, position management, reference data; data ingestion pipelines; independent query services for aggregation | PORT-01 through PORT-08, DATA-01 through DATA-04, RISK-06 | 6/6 verified | 5 plans ✓ |
-| **4 - Regulatory Analytics & Reporting** | Regulatory frameworks (GAAP/IFRS, Basel, CECL), audit trails, model governance; frontend expansion with domain-specific views and exports | REG-01 through REG-05, RPT-01 through RPT-04 | 9 success criteria | **6 plans** |
+| **4 - Regulatory Analytics & Reporting** ✓ | Regulatory frameworks (GAAP/IFRS, Basel, CECL), audit trails, model governance; frontend expansion with domain-specific views and exports | REG-01 through REG-05, RPT-01 through RPT-04 | 9/9 verified | 6 plans ✓ |
 
 ---
 
@@ -34,12 +34,12 @@ Expanding the Risk MVP from a working prototype into an institutional-grade port
 **Plans:** 6 plans in 3 waves
 
 Plans:
-- [ ] 04-01-PLAN.md — Database schema extension (audit trail, regulatory reference, model governance, alerts)
-- [ ] 04-02-PLAN.md — Regulatory compute modules (CECL, Basel, GAAP/IFRS calculations)
-- [ ] 04-03-PLAN.md — Regulatory service implementation (CECL/Basel/accounting/audit/model governance routes)
-- [ ] 04-04-PLAN.md — Export pipeline (CSV/Excel generation with openpyxl)
-- [ ] 04-05-PLAN.md — Frontend expansion (Regulatory, AuditTrail, ModelGovernance, Export pages)
-- [ ] 04-06-PLAN.md — Alerting and threshold monitoring (backend + frontend integration)
+- [x] 04-01-PLAN.md — Database schema extension (audit trail, regulatory reference, model governance, alerts)
+- [x] 04-02-PLAN.md — Regulatory compute modules (CECL, Basel, GAAP/IFRS calculations)
+- [x] 04-03-PLAN.md — Regulatory service implementation (CECL/Basel/accounting/audit/model governance routes)
+- [x] 04-04-PLAN.md — Export pipeline (CSV/Excel generation with openpyxl)
+- [x] 04-05-PLAN.md — Frontend expansion (Regulatory, AuditTrail, ModelGovernance, Export pages)
+- [x] 04-06-PLAN.md — Alerting and threshold monitoring (backend + frontend integration)
 
 ### Requirements Mapped
 
@@ -117,7 +117,7 @@ Plans:
 - Phase 1 complete: Platform foundation and compute engine ready ✓
 - Phase 2 complete: Institutional-grade pricers and risk analytics operational ✓
 - Phase 3 complete: Portfolio management and data ingestion pipelines functional ✓
-- Phase 4 complete: Regulatory frameworks and reporting operational
+- Phase 4 complete: Regulatory frameworks and reporting operational ✓
 - End-to-end workflow tested: Market data ingestion → Portfolio upload → Run execution → Results reporting (all in <15 min for 5000 positions)
 - User acceptance testing passed by risk team
 - Deployed to AWS with auto-scaling and monitoring in place
@@ -136,9 +136,9 @@ Plans:
 | Cashflow (CF) | 6 | Phase 2 ✓ |
 | Risk (RISK) | 7 | Phase 2 (6) ✓, Phase 3 (1) ✓ |
 | Scenario (SCEN) | 4 | Phase 2 ✓ |
-| Regulatory (REG) | 5 | Phase 4 |
+| Regulatory (REG) | 5 | Phase 4 ✓ |
 | Data (DATA) | 4 | Phase 3 ✓ |
-| Reporting (RPT) | 4 | Phase 4 |
+| Reporting (RPT) | 4 | Phase 4 ✓ |
 | **TOTAL** | **49** | **49 / 49** |
 
 **Coverage:** 49/49 requirements mapped. No orphans. No duplicates.
@@ -162,9 +162,9 @@ Phase 1: Foundation & Infrastructure ✓
 
 ## Next Steps
 
-1. **Phase 4 Execution:** Begin with `/gsd:execute-phase 04` to run first wave (Plans 01-02)
-2. **Estimate Effort:** Phase 4 ~3-4 weeks (6 plans, 3 waves, regulatory compute + frontend expansion)
-3. **Completion:** After Phase 4, all 49 v1 requirements delivered and IPRS platform feature-complete
+1. **All 4 phases complete.** 49/49 v1 requirements delivered. IPRS platform feature-complete.
+2. **Next:** `/gsd:complete-milestone` to archive v1.0 and plan v2.0
+3. **Production readiness:** Load testing, security audit, deployment to AWS
 
 ---
 
