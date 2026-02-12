@@ -4,7 +4,7 @@
 **Version:** 1.0
 **Created:** 2026-02-11
 **Depth:** Quick (4 phases)
-**Status:** Phase 1 Complete, Phase 2 Complete
+**Status:** Phase 1 Complete, Phase 2 Complete, Phase 3 Complete
 
 ---
 
@@ -20,7 +20,7 @@ Expanding the Risk MVP from a working prototype into an institutional-grade port
 |-------|------|-------------------|------------------|
 | **1 - Foundation & Infrastructure** ✓ | Platform skeleton ready; compute engine refactored with registry pattern; database schema extended for full analytics pipeline | PLAT-01, PLAT-02, PLAT-03, PLAT-04, PLAT-05, PLAT-06 | 6/6 verified |
 | **2 - Core Compute Engines** ✓ | Institutional-grade pricers, cashflow generation, risk analytics, and scenario execution; worker processes full pipeline end-to-end | PRICE-01 through PRICE-09, CF-01 through CF-06, RISK-01 through RISK-07, SCEN-01 through SCEN-04 | 8/8 verified |
-| **3 - Portfolio & Data Services** | Portfolio hierarchy, position management, reference data; data ingestion pipelines; independent query services for aggregation | PORT-01 through PORT-08, DATA-01 through DATA-04 | 6 success criteria |
+| **3 - Portfolio & Data Services** ✓ | Portfolio hierarchy, position management, reference data; data ingestion pipelines; independent query services for aggregation | PORT-01 through PORT-08, DATA-01 through DATA-04, RISK-06 | 6/6 verified |
 | **4 - Regulatory Analytics & Reporting** | Regulatory frameworks (GAAP/IFRS, Basel, CECL), audit trails, model governance; frontend expansion with domain-specific views and exports | REG-01 through REG-05, RPT-01 through RPT-04 | 5 success criteria |
 
 ---
@@ -175,11 +175,11 @@ Plans:
 **Plans:** 5 plans in 3 waves
 
 Plans:
-- [ ] 03-01-PLAN.md — Database schema extension (portfolio, reference data, lineage)
-- [ ] 03-02-PLAN.md — Portfolio hierarchy and position management
-- [ ] 03-03-PLAN.md — Reference data and aggregation queries
-- [ ] 03-04-PLAN.md — Data ingestion service (market feeds, loan servicing, lineage)
-- [ ] 03-05-PLAN.md — Multi-currency aggregation and portfolio snapshots
+- [x] 03-01-PLAN.md — Database schema extension (portfolio, reference data, lineage) ✓ 2026-02-11
+- [x] 03-02-PLAN.md — Portfolio hierarchy and position management ✓ 2026-02-11
+- [x] 03-03-PLAN.md — Reference data and aggregation queries ✓ 2026-02-11
+- [x] 03-04-PLAN.md — Data ingestion service (market feeds, loan servicing, lineage) ✓ 2026-02-11
+- [x] 03-05-PLAN.md — Multi-currency aggregation and portfolio snapshots ✓ 2026-02-11
 
 **Goal:** Portfolio hierarchy, position management, reference data, and data ingestion pipelines. Independent query services for portfolio aggregation and analytics queries.
 
