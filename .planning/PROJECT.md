@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A distributed portfolio analytics platform for an internal risk team managing a loan-heavy portfolio (thousands of positions). Expands the existing Risk MVP from basic instrument valuation into a full-spectrum analytics engine covering pricing, cash flow modeling, risk analytics (market/credit/liquidity), performance attribution, scenario simulation, and regulatory support. Deployed on AWS with microservices architecture, Terraform infrastructure, and CI/CD pipelines.
+A distributed portfolio analytics platform for an internal risk team managing a loan-heavy portfolio (thousands of positions). Provides end-to-end analytics from market data ingestion through pricing, cash flow modeling, risk calculation (market/credit/liquidity), regulatory compliance (CECL/Basel/GAAP-IFRS), and drill-down reporting with export. Deployed on AWS with microservices architecture.
 
 ## Core Value
 
@@ -12,135 +12,66 @@ The risk team can run end-to-end portfolio analytics - from market data ingestio
 
 ### Validated
 
-<!-- Existing capabilities confirmed from codebase map -->
-
-- ✓ Market data snapshot ingestion (curves, FX spots) with quality checks — existing (marketdata_svc)
-- ✓ Run creation with portfolio scope, measures, and scenarios — existing (run_orchestrator)
-- ✓ Task fanout by product_type and hash_bucket with lease-based queue — existing (run_orchestrator + worker)
-- ✓ FX Forward pricing (PV, DV01, FX_DELTA) — existing (compute/pricers/fx_fwd.py)
-- ✓ Amortizing loan pricing (PV, DV01, ACCRUED_INTEREST) — existing (compute/pricers/loan.py)
-- ✓ Fixed bond pricing (PV, DV01) — existing (compute/pricers/bond.py)
-- ✓ Zero curve interpolation and discount factor calculation — existing (compute/quantlib/curve.py)
-- ✓ Scenario application (BASE, RATES_PARALLEL_1BP, SPREAD_25BP, FX_SPOT_1PCT) — existing (compute/quantlib/scenarios.py)
-- ✓ Results aggregation with drill-down by portfolio_node_id and product_type — existing (results_api)
-- ✓ Immutable snapshot pattern with SHA-256 content addressing — existing (all services)
-- ✓ UPSERT idempotency for all writes — existing (all services)
-- ✓ Golden test framework for pricers — existing (compute/tests/)
-- ✓ React UI for run submission, results polling, and cube drill-down — existing (frontend)
-- ✓ Instrument versioning schema with governance fields — existing (sql/001_mvp_core.sql)
-- ✓ Run break tracking schema — existing (sql/001_mvp_core.sql)
+- ✓ Shared library with Pydantic models, service factory, health checks, pagination -- v1.0
+- ✓ Docker containerization and Terraform AWS infrastructure -- v1.0
+- ✓ GitHub Actions CI/CD pipelines -- v1.0
+- ✓ Pricer registry pattern (auto-bootstrap, function-based) -- v1.0
+- ✓ 8 institutional-grade pricers (FX Fwd, Bond, Loan, Floating-Rate, Callable, Putable, ABS/MBS, Structured) -- v1.0
+- ✓ Full curve construction (multi-curve, QuantLib bootstrap) -- v1.0
+- ✓ Day count conventions and business day calendars -- v1.0
+- ✓ Cashflow generation (amortization, prepayment, waterfall) -- v1.0
+- ✓ Risk analytics: Duration, DV01, Convexity, Key Rate, VaR, ES, Credit Risk, Liquidity Risk -- v1.0
+- ✓ Scenario management and Monte Carlo simulation -- v1.0
+- ✓ Portfolio hierarchy, position tracking, concentration monitoring -- v1.0
+- ✓ Multi-currency FX conversion with content-addressable snapshots -- v1.0
+- ✓ Data ingestion (market feeds, loan servicing, lineage) -- v1.0
+- ✓ CECL allowance (ASC 326), Basel III RWA, GAAP/IFRS valuation -- v1.0
+- ✓ Immutable audit trail with PostgreSQL trigger enforcement -- v1.0
+- ✓ Model governance with approval workflow -- v1.0
+- ✓ 8-page React frontend with drill-down, export, and alerting -- v1.0
 
 ### Active
 
-<!-- New capabilities to build in this milestone -->
-
-**A. Platform Foundation**
-- [ ] Shared library with Pydantic models, events, auth middleware, config management
-- [ ] Common service utilities (service factory, health checks, pagination, error handling)
-- [ ] Docker containerization for all services and workers
-- [ ] Terraform AWS infrastructure (VPC, ECS Fargate, RDS Aurora, API Gateway, SQS, ECR)
-- [ ] GitHub Actions CI/CD (lint, test, build, deploy)
-- [ ] API Gateway with path-based routing to all services
-
-**B. Instrument & Reference Data**
-- [ ] Instrument master service with CRUD for loans, bonds, ABS/MBS, derivatives
-- [ ] Reference data management (issuers, sectors, ratings, geography)
-- [ ] Trade lifecycle support (booking, amendment, termination)
-- [ ] Instrument version approval workflows
-
-**C. Portfolio Management**
-- [ ] Portfolio hierarchy and node management
-- [ ] Position tracking and holdings aggregation (by issuer, sector, rating, geography)
-- [ ] Portfolio segmentation and tagging
-- [ ] Historical snapshots and time-series tracking
-- [ ] Multi-currency support
-- [ ] Portfolio metrics: Market value, Book value, Accrued interest, Unrealized/Realized P&L, Portfolio yield, WAM, WAL
-
-**D. Pricing & Valuation (institutional-grade replacements)**
-- [ ] Abstract base pricer with registry pattern (replace if/elif dispatch)
-- [ ] Floating-rate instrument pricer
-- [ ] Callable/putable bond pricers
-- [ ] ABS/MBS pricer
-- [ ] Structured product pricer
-- [ ] Derivatives hedge pricer
-- [ ] Full curve construction (multi-curve, bootstrap)
-- [ ] Multiple interpolation methods (linear, log-linear, cubic spline)
-- [ ] Day count conventions (ACT/360, ACT/365, 30/360)
-- [ ] Business day calendar
-- [ ] Measures: Clean/Dirty price, YTM, YTC/YTP, OAS, Z-spread, DM, Par spread
-
-**E. Cash Flow & Amortization**
-- [ ] Payment schedule generation
-- [ ] Amortization schedule modeling (level pay, bullet, custom)
-- [ ] Prepayment modeling (CPR, PSA)
-- [ ] Default and recovery modeling (LGD, EAD)
-- [ ] Adjustable rate reset logic
-- [ ] Scenario cash flow projection
-- [ ] Waterfall modeling for structured products
-
-**F. Risk Analytics**
-- [ ] Market risk: Duration (Macaulay/Modified/Effective), DV01/PV01, Convexity, Key rate duration, Spread duration
-- [ ] VaR (Historical, Parametric, Monte Carlo) and Expected Shortfall
-- [ ] Credit risk: PD modeling, Expected/Unexpected loss, Rating migration, Concentration monitoring, RAROC
-- [ ] Liquidity risk: Bid/ask spread analytics, Time-to-liquidate, Liquidity coverage ratios
-
-**G. Scenario & Forecasting**
-- [ ] Scenario definition and management service
-- [ ] Stress testing configuration (rate shocks, spread shocks)
-- [ ] Monte Carlo simulation engine (interest rate paths, macro factors)
-- [ ] What-if analysis and portfolio rebalancing simulation
-
-**H. Performance & Attribution**
-- [ ] Benchmark comparison engine
-- [ ] Total return, Income return, Price return decomposition
-- [ ] Attribution by duration, spread, security selection, sector allocation
-- [ ] Sharpe ratio, Information ratio, Tracking error
-
-**I. Regulatory & Accounting**
-- [ ] GAAP/IFRS valuation support framework
-- [ ] Expected credit loss modeling (CECL-style)
-- [ ] Basel III capital analytics and RWA calculation
-- [ ] Audit trail and calculation explainability
-- [ ] Model governance (versioning, backtesting, calibration tracking)
-
-**J. Data Integration**
-- [ ] Market data feed ingestion (yield curves, credit spreads, ratings)
-- [ ] Loan servicing data ingestion
-- [ ] Historical data versioning
-- [ ] Data lineage tracking
-
-**K. Reporting & Visualization**
-- [ ] Expanded frontend pages for each analytics domain
-- [ ] Drill-down analytics beyond current cube view
-- [ ] Export capabilities for downstream systems
-- [ ] Alerting and threshold monitoring
+- [ ] Performance attribution (duration, spread, selection, sector allocation decomposition)
+- [ ] Benchmark comparison engine (Sharpe, Information ratio, Tracking error)
+- [ ] Loan-specific analytics (FICO distribution, geographic concentration, origination cohorts)
+- [ ] AI/ML prepayment and default prediction models
+- [ ] Pricing vendor API integration (Bloomberg, Refinitiv)
+- [ ] Webhook triggers on run completion
+- [ ] Connection pooling for high-concurrency scenarios
+- [ ] Swaption and caps/floors pricer extensions
+- [ ] CCAR/DFAST regulatory stress scenarios
+- [ ] Load testing at 1M+ positions with partitioning strategy
 
 ### Out of Scope
 
-- Real-time streaming analytics — batch/intraday sufficient for thousands of positions
-- Multi-tenant SaaS features — internal team only, no tenant isolation needed
-- Mobile application — web-only
-- Pricing vendor API integration (Bloomberg, Refinitiv) — internal models only for v1
-- AI/ML models (prepayment prediction, default prediction, anomaly detection) — defer to v2
-- Full regulatory reporting generation (call reports, etc.) — framework only for v1
+- Real-time streaming analytics -- batch/intraday sufficient for thousands of positions
+- Multi-tenant SaaS features -- internal team only, no tenant isolation needed
+- Mobile application -- web-only, portfolio analytics requires large screens
+- Full regulatory reporting generation (FFIEC, SEC N-PORT) -- framework only
+- Commodity/FX spot trading analytics -- loan book is core
 
 ## Context
 
-**Existing codebase:** Working MVP with 3 FastAPI services, distributed worker, 3 pricers, PostgreSQL with JSONB, React frontend. Patterns are solid (immutable snapshots, lease-based queue, content-addressed hashing, UPSERT idempotency). Pricers are simplified prototypes that need institutional-grade replacements.
+**Shipped v1.0** with ~46,753 lines across 198 files (17,195 Python, 2,014 TSX, 707 SQL, 1,200 Terraform). 106 commits over 11 days. 49/49 requirements delivered.
 
-**User profile:** Internal risk team at an investment firm (lighter regulatory requirements than a bank). Portfolio is loan-heavy (70%+ loans) with bonds and derivatives as hedges. Thousands of positions - manageable scale.
+**Tech stack:** Python 3.11+ / FastAPI / PostgreSQL / React 18 / Vite / QuantLib / openpyxl / Terraform / GitHub Actions.
 
-**Technical environment:** Windows 11 development, targeting AWS deployment. Python 3.11+, PostgreSQL, React 18.
+**Architecture:** 7 FastAPI microservices (marketdata, orchestrator, results, portfolio, data ingestion, regulatory, risk), distributed worker with lease-based task queue, shared PostgreSQL with JSONB.
 
-**Codebase map:** Full analysis available in `.planning/codebase/` (7 documents, 1,469 lines).
+**Known technical debt:**
+- Pre-existing compute stubs (allowance.py, rwa.py, stress_capital.py) superseded but not removed
+- Two stretch endpoints return 501 (hedge effectiveness, backtesting)
+- No connection pooling (sync connection-per-request)
+- Fixed volatility assumptions (20% flat for caps/floors)
 
 ## Constraints
 
-- **Tech stack**: Python 3.11+ / FastAPI / PostgreSQL / React 18 — preserve existing investment
+- **Tech stack**: Python 3.11+ / FastAPI / PostgreSQL / React 18 -- preserve existing investment
 - **Infrastructure**: AWS (ECS Fargate, RDS Aurora, API Gateway) with Terraform IaC
 - **CI/CD**: GitHub Actions
-- **Database**: Shared PostgreSQL with schema-per-service logical separation (can split later)
-- **Compatibility**: Existing MVP services must remain backward-compatible during expansion
+- **Database**: Shared PostgreSQL with schema-per-service logical separation
+- **Compatibility**: v1.0 API contracts must remain backward-compatible in v1.x releases
 - **Asset priority**: Loan instruments are primary; bonds, ABS/MBS, derivatives are secondary
 - **Scale**: Thousands of positions, batch + intraday recalculation
 
@@ -148,13 +79,19 @@ The risk team can run end-to-end portfolio analytics - from market data ingestio
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Terraform over CDK/CloudFormation | Industry standard in finance, declarative, cloud-agnostic | — Pending |
-| Shared PostgreSQL over DB-per-service | Simpler ops for internal team, easier cross-domain joins, can split later | — Pending |
-| GitHub Actions over CodePipeline | Already on GitHub, native integration, larger ecosystem | — Pending |
-| Replace MVP pricers rather than extend | Current pricers are prototypes, institutional-grade models needed | — Pending |
-| Registry pattern for pricers | Replace if/elif chain with pluggable registry for extensibility | — Pending |
-| 10 microservices (3 existing + 7 new) | Clear domain boundaries, independently deployable, team can own domains | — Pending |
-| Scaffold-first approach | Get full structure in place before deep feature implementation | — Pending |
+| Function-based pricer registry | No base class required, backward-compatible | ✓ Good -- 8 pricers registered cleanly |
+| QuantLib for curve construction | Industry standard, 20+ years development | ✓ Good -- multi-curve bootstrap works |
+| Multi-curve framework from start | Post-2008 industry standard for basis spread | ✓ Good -- OIS/SOFR separation clean |
+| Fixed Hull-White params (a=0.03, sigma=0.12) | Market-standard for USD callable bonds | ✓ Good -- defer swaption vol calibration |
+| Historical PD lookup from Moody's data | Simpler than econometric models for v1 | ✓ Good -- sufficient for standardized approach |
+| PostgreSQL recursive CTEs for hierarchy | DB-optimized tree traversal | ✓ Good -- no N+1 queries |
+| Content-addressable snapshots (SHA-256) | Automatic deduplication, immutable versioning | ✓ Good -- proven pattern throughout |
+| Trigger-based audit immutability | Regulatory compliance at DB layer | ✓ Good -- blocks UPDATE/DELETE |
+| Multi-scenario CECL with probability weighting | ASC 326 compliance | ✓ Good -- enables stress integration |
+| Basel III tuple-based risk weight lookup | Clean separation, fallback chain | ✓ Good -- extensible to IRB later |
+| Shared PostgreSQL (no DB per service) | Simpler ops for internal team | -- Revisit if scale exceeds 100K positions |
+| No connection pooling for v1 | Sufficient for <10K positions | -- Revisit for production load |
+| Scaffold-first approach | Full structure before deep features | ✓ Good -- reduced rework |
 
 ---
-*Last updated: 2026-02-11 after initialization*
+*Last updated: 2026-02-12 after v1.0 milestone*

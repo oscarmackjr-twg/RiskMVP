@@ -2,15 +2,17 @@
 
 **Project:** IPRS Institutional Portfolio Risk & Analytics System
 **Created:** 2026-02-11
-**Last Updated:** 2026-02-12T03:54:05Z
+**Last Updated:** 2026-02-12T05:00:00Z
 
 ---
 
 ## Project Reference
 
+See: .planning/PROJECT.md (updated 2026-02-12)
+
 **Core Value:** The risk team can run end-to-end portfolio analytics on their loan portfolio with institutional-grade reproducibility and audit trails.
 
-**Current Status:** All 4 Phases Complete - v1.0 Feature-Complete
+**Current Focus:** v1.0 shipped. Planning next milestone.
 
 **Team:** Solo developer + Claude (orchestrator mode)
 
