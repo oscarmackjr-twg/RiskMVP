@@ -7,8 +7,8 @@ WORKDIR /build
 COPY pyproject.toml ./
 
 # Install build tools and create wheels for all dependencies
-RUN pip install --no-cache-dir build && \
-    pip wheel --no-cache-dir --wheel-dir /wheels \
+RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org build && \
+    pip wheel --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org --wheel-dir /wheels \
     fastapi \
     uvicorn[standard] \
     psycopg[binary] \
@@ -22,7 +22,7 @@ WORKDIR /app
 
 # Copy wheels from builder and install
 COPY --from=builder /wheels /wheels
-RUN pip install --no-cache-dir /wheels/*.whl && rm -rf /wheels
+RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org /wheels/*.whl && rm -rf /wheels
 
 # Copy application code (shared libraries, common, compute for perf/optimization, and service)
 COPY shared/ ./shared/
