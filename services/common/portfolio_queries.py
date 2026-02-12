@@ -2,6 +2,29 @@
 from __future__ import annotations
 
 from typing import Optional
+from services.common.db import db_conn
+
+
+def get_fx_snapshot_for_run(run_id: str) -> str:
+    """Get market snapshot_id for run to use for FX conversion.
+
+    Args:
+        run_id: Run identifier
+
+    Returns:
+        Market snapshot ID associated with the run
+
+    Raises:
+        ValueError: If run not found
+    """
+    with db_conn() as conn:
+        row = conn.execute(
+            "SELECT market_snapshot_id FROM run WHERE run_id = %(rid)s",
+            {'rid': run_id}
+        ).fetchone()
+        if not row:
+            raise ValueError(f"Run {run_id} not found")
+        return row['market_snapshot_id']
 
 
 def build_issuer_aggregation_query(
