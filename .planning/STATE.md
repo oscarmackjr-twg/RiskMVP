@@ -2,7 +2,7 @@
 
 **Project:** IPRS Institutional Portfolio Risk & Analytics System
 **Created:** 2026-02-11
-**Last Updated:** 2026-02-11T22:16:19Z
+**Last Updated:** 2026-02-12T03:54:05Z
 
 ---
 
@@ -21,16 +21,16 @@
 | Metric | Status |
 |--------|--------|
 | **Active Phase** | Phase 4: Regulatory Analytics & Reporting (IN PROGRESS) |
-| **Current Plan** | 04-01 COMPLETE ✓ — Regulatory analytics schema extension |
-| **Overall Progress** | Phase 4: 1/6 plans (Phase 1 complete, Phase 2 complete, Phase 3 5/9) |
+| **Current Plan** | 04-02 COMPLETE ✓ — Regulatory calculation modules |
+| **Overall Progress** | Phase 4: 2/6 plans (Phase 1 complete, Phase 2 complete, Phase 3 5/9) |
 | **Requirements Coverage** | 49/49 mapped (100%) |
 | **Blockers** | None |
 
 ### Progress Bar
 
 ```
-Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [#.......]
-    100%                    100%                    ~56%                  ~17%
+Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [##......]
+    100%                    100%                    ~56%                  ~33%
 ```
 
 ---
@@ -77,6 +77,7 @@ Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [#
 | Phase 03 P04 | 241 | 3 tasks | 4 files |
 | Phase 03 P05 | 227 | 3 tasks | 4 files |
 | Phase 04 P01 | 175 | 3 tasks | 3 files |
+| Phase 04 P02 | 341 | 3 tasks | 6 files |
 
 ### Execution Readiness
 
@@ -142,6 +143,11 @@ Foundation [########] Core Compute [########] Portfolio [#####...] Regulatory [#
 | Trigger-based audit trail immutability | PostgreSQL trigger prevent_audit_modification() blocks all UPDATE/DELETE on audit_trail to ensure regulatory compliance | Phase 4 Plan 01 |
 | Temporal regulatory reference data | (ref_type, entity_key, effective_date DESC) index pattern enables point-in-time lookups for risk weights, PD curves, LGD tables | Phase 4 Plan 01 |
 | UPSERT idempotency for regulatory metrics | UNIQUE constraint on (portfolio_node_id, metric_type, as_of_date) enables ON CONFLICT DO UPDATE for regulatory_metrics caching | Phase 4 Plan 01 |
+| Multi-scenario CECL with probability weighting | Base/adverse/severely adverse scenarios weighted for ASC 326 compliance; enables stress testing integration | Phase 4 Plan 02 |
+| Lifetime PD from survival probability | 1 - Π(1-PD_i) method for converting marginal annual PDs to cumulative lifetime PD; mathematically rigorous approach | Phase 4 Plan 02 |
+| Basel III tuple-based risk weight lookup | (counterparty_type, rating) tuples with fallback to (type, ANY) → default 1.00; clean separation of concerns | Phase 4 Plan 02 |
+| GAAP >10% impairment threshold | Simplified "other than temporary" impairment threshold for HTM securities; production would use duration/severity analysis | Phase 4 Plan 02 |
+| IFRS 9 SPPI test for product types | Bonds/loans pass SPPI (solely payments of principal and interest), derivatives fail; business model determines final category | Phase 4 Plan 02 |
 
 ### Architectural Constraints
 
@@ -339,3 +345,46 @@ python sql/apply_and_verify_003.py
 - RPT-04 (partial): Alert config and log schema ready for threshold monitoring
 
 **Phase 4 Status:** 1/6 plans complete (regulatory schema foundation delivered)
+
+---
+
+## Phase 04 Plan 02 Execution Complete
+
+**Plan:** Regulatory Calculation Modules (CECL, Basel III, GAAP/IFRS)
+**Completed:** 2026-02-12T03:54:05Z
+**Duration:** 341 seconds (5 min 41 sec)
+
+### Decisions Made
+- Multi-scenario CECL with probability weighting for base/adverse/severely adverse scenarios
+- Lifetime PD calculation using survival probability method (1 - Π(1-PD_i))
+- Stage classification aligned with IFRS 9 for international consistency
+- Basel III standardized approach with tuple-based risk weight lookup
+- Risk weight fallback order: exact match → (type, ANY) → default 1.00
+- GAAP impairment threshold: >10% decline for "other than temporary" impairment
+- IFRS 9 SPPI test: bonds/loans pass, derivatives fail
+- Business model override parameter for IFRS classification flexibility
+
+### Files Created
+- compute/regulatory/cecl.py (187 lines: CECL allowance, lifetime PD, stage classification)
+- compute/regulatory/basel.py (214 lines: RWA calculation, risk weights, capital ratios)
+- compute/regulatory/gaap_ifrs.py (363 lines: GAAP/IFRS classification and valuation)
+- compute/tests/test_cecl.py (277 lines: 13 tests for CECL calculations)
+- compute/tests/test_basel.py (236 lines: 14 tests for Basel III RWA)
+- compute/tests/test_gaap_ifrs.py (386 lines: 22 tests for GAAP/IFRS framework)
+
+### Commits
+- f560595: feat(04-02): implement CECL allowance calculation (REG-02)
+- 5681445: feat(04-02): implement Basel III RWA calculation (REG-03)
+- f9a8205: feat(04-02): implement GAAP/IFRS valuation framework (REG-01)
+
+### Requirements Completed
+- REG-01: GAAP/IFRS valuation framework with HTM/AFS/Trading classification
+- REG-02: CECL allowance calculation with multi-scenario ASC 326 approach
+- REG-03: Basel III RWA calculation using standardized approach risk weights
+
+### Test Results
+- 49 tests passing (13 CECL + 14 Basel + 22 GAAP/IFRS)
+- 100% test pass rate
+- All modules importable and verified
+
+**Phase 4 Status:** 2/6 plans complete (regulatory compute layer ready for service integration)
