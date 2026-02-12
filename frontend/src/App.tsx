@@ -3,6 +3,10 @@ import { Link, NavLink, Route, Routes } from "react-router-dom";
 import RunLauncherPage from "./pages/RunLauncherPage";
 import RunResultsPage from "./pages/RunResultsPage";
 import RunCubePage from "./pages/RunCubePage";
+import RegulatoryPage from "./pages/RegulatoryPage";
+import AuditTrailPage from "./pages/AuditTrailPage";
+import ModelGovernancePage from "./pages/ModelGovernancePage";
+import ExportPage from "./pages/ExportPage";
 
 function TopNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -36,6 +40,38 @@ function TopNav() {
               }
             >
               Launcher
+            </NavLink>
+            <NavLink
+              to="/regulatory"
+              className={({ isActive }) =>
+                `brutal-btn ${isActive ? 'bg-brutal-pink' : 'bg-brutal-yellow'}`
+              }
+            >
+              Regulatory
+            </NavLink>
+            <NavLink
+              to="/audit-trail"
+              className={({ isActive }) =>
+                `brutal-btn ${isActive ? 'bg-brutal-pink' : 'bg-brutal-yellow'}`
+              }
+            >
+              Audit Trail
+            </NavLink>
+            <NavLink
+              to="/model-governance"
+              className={({ isActive }) =>
+                `brutal-btn ${isActive ? 'bg-brutal-pink' : 'bg-brutal-yellow'}`
+              }
+            >
+              Models
+            </NavLink>
+            <NavLink
+              to="/export"
+              className={({ isActive }) =>
+                `brutal-btn ${isActive ? 'bg-brutal-pink' : 'bg-brutal-yellow'}`
+              }
+            >
+              Export
             </NavLink>
           </nav>
 
@@ -81,6 +117,42 @@ function TopNav() {
               }
             >
               Launcher
+            </NavLink>
+            <NavLink
+              to="/regulatory"
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `brutal-btn w-full ${isActive ? 'bg-brutal-pink' : 'bg-brutal-yellow'}`
+              }
+            >
+              Regulatory
+            </NavLink>
+            <NavLink
+              to="/audit-trail"
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `brutal-btn w-full ${isActive ? 'bg-brutal-pink' : 'bg-brutal-yellow'}`
+              }
+            >
+              Audit Trail
+            </NavLink>
+            <NavLink
+              to="/model-governance"
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `brutal-btn w-full ${isActive ? 'bg-brutal-pink' : 'bg-brutal-yellow'}`
+              }
+            >
+              Models
+            </NavLink>
+            <NavLink
+              to="/export"
+              onClick={() => setMobileMenuOpen(false)}
+              className={({ isActive }) =>
+                `brutal-btn w-full ${isActive ? 'bg-brutal-pink' : 'bg-brutal-yellow'}`
+              }
+            >
+              Export
             </NavLink>
           </nav>
         )}
@@ -131,6 +203,10 @@ export default function App() {
             <Route path="/" element={<RunLauncherPage />} />
             <Route path="/runs/:runId" element={<RunResultsPage />} />
             <Route path="/runs/:runId/cube" element={<RunCubePage />} />
+            <Route path="/regulatory" element={<RegulatoryPage />} />
+            <Route path="/audit-trail" element={<AuditTrailPage />} />
+            <Route path="/model-governance" element={<ModelGovernancePage />} />
+            <Route path="/export" element={<ExportPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
