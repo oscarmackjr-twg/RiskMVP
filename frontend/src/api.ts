@@ -1,5 +1,8 @@
 import axios from "axios";
 
+// Shared axios instance for services that use direct api.get/api.post patterns
+export const api = axios.create();
+
 export type RunCreateRequest = {
   run_id: string;
   run_type: "SANDBOX" | "INTRADAY" | "EOD_OFFICIAL";

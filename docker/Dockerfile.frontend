@@ -3,6 +3,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /build
 
+# Disable strict SSL for corporate proxy environments
+RUN npm config set strict-ssl false
+
 # Copy package files and install dependencies
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
