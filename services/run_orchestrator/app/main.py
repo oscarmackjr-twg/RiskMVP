@@ -287,3 +287,58 @@ def create_run(req: RunRequestedV1):
                 })
 
     return {"run_id": req.run_id, "status": "QUEUED", "position_snapshot_id": psid, "task_product_types": product_types}
+
+
+GET_RUN_SQL = """
+SELECT run_id, run_type, status, as_of_time, market_snapshot_id, measures, scenarios, portfolio_scope
+FROM "run"
+WHERE run_id = %(rid)s;
+"""
+
+TASK_STATUS_SQL = """
+SELECT status, COUNT(*) AS cnt
+FROM run_task
+WHERE run_id = %(rid)s
+GROUP BY status;
+"""
+
+UPDATE_RUN_STATUS_SQL = """
+UPDATE "run" SET status = %(status)s WHERE run_id = %(rid)s;
+"""
+
+
+@app.get("/api/v1/runs/{run_id}")
+def get_run(run_id: str):
+    with db_conn() as conn:
+        conn.row_factory = dict_row
+        row = conn.execute(GET_RUN_SQL, {"rid": run_id}).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Run not found")
+
+        # Derive run status from task statuses
+        task_rows = conn.execute(TASK_STATUS_SQL, {"rid": run_id}).fetchall()
+        task_summary = {r["status"]: r["cnt"] for r in task_rows}
+        total = sum(task_summary.values())
+
+        if total > 0:
+            succeeded = task_summary.get("SUCCEEDED", 0)
+            dead = task_summary.get("DEAD", 0)
+
+            if succeeded == total:
+                derived = "COMPLETED"
+            elif dead > 0 and (succeeded + dead) == total:
+                derived = "FAILED"
+            elif task_summary.get("RUNNING", 0) > 0 or task_summary.get("FAILED", 0) > 0:
+                derived = "RUNNING"
+            else:
+                derived = row["status"]
+
+            # Update run status if changed
+            if derived != row["status"]:
+                conn.execute(UPDATE_RUN_STATUS_SQL, {"rid": run_id, "status": derived})
+                conn.commit()
+                row["status"] = derived
+
+        result = dict(row)
+        result["tasks"] = task_summary
+        return result

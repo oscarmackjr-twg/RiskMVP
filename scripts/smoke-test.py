@@ -110,6 +110,7 @@ class SmokeTest:
         try:
             return requests.post(url, json=body, timeout=self.timeout)
         except Exception as e:
+            print(f"    POST error: {e}")
             return None
 
     def test_health_checks(self):
@@ -162,15 +163,15 @@ class SmokeTest:
     def test_run_submission(self, snapshot_id: str) -> str | None:
         """POST a run request and poll until completed."""
         print("\n[4/6] Run Submission")
+        run_id = f"RUN-SMOKE-{int(time.time())}"
         run_request = {
+            "run_id": run_id,
             "run_type": "SANDBOX",
             "as_of_time": "2026-01-23T00:00:00Z",
             "market_snapshot_id": snapshot_id,
-            "model_set_id": "MODELSET-SMOKE-001",
             "portfolio_scope": {"node_ids": ["BOOK-PRIME-LOANS"]},
             "measures": ["PV", "DV01"],
             "scenarios": [{"scenario_set_id": "BASE"}],
-            "execution": {"hash_mod": 1},
         }
 
         if self.is_local:
@@ -230,15 +231,16 @@ class SmokeTest:
             self.check("GET summary", False, f"HTTP {resp.status_code}" if resp else "connection refused")
 
         # Cube
-        url = f"{results_base}/{run_id}/cube"
+        url = f"{results_base}/{run_id}/cube?measure=PV&by=product_type"
         resp = self._get(url)
         if resp and resp.status_code == 200:
             body = resp.json()
-            rows = body.get("rows", body) if isinstance(body, dict) else body
+            rows = body if isinstance(body, list) else body.get("rows", [])
             count = len(rows) if isinstance(rows, list) else "N/A"
             self.check("GET cube", True, f"{count} rows")
         else:
-            self.check("GET cube", False, f"HTTP {resp.status_code}" if resp else "connection refused")
+            detail = f"HTTP {resp.status_code}: {resp.text[:200]}" if resp else "no response"
+            self.check("GET cube", False, detail)
 
     def test_frontend(self):
         """Check that the frontend is serving."""
