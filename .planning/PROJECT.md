@@ -51,19 +51,25 @@ The risk team can run end-to-end portfolio analytics - from market data ingestio
 - Full regulatory reporting generation (FFIEC, SEC N-PORT) -- framework only
 - Commodity/FX spot trading analytics -- loan book is core
 
-## Context
+## Current State
 
-**Shipped v1.0** with ~46,753 lines across 198 files (17,195 Python, 2,014 TSX, 707 SQL, 1,200 Terraform). 106 commits over 11 days. 49/49 requirements delivered.
+**v1.0 shipped 2026-02-12** — deployed to AWS ECS with 9 live services, 21/21 smoke tests passing, real FRED market data seeded.
+
+**Codebase:** 20,727 LOC across 204 files (Python, TypeScript, SQL). 116 commits over 12 days. 49/49 requirements delivered.
 
 **Tech stack:** Python 3.11+ / FastAPI / PostgreSQL / React 18 / Vite / QuantLib / openpyxl / Terraform / GitHub Actions.
 
-**Architecture:** 7 FastAPI microservices (marketdata, orchestrator, results, portfolio, data ingestion, regulatory, risk), distributed worker with lease-based task queue, shared PostgreSQL with JSONB.
+**Architecture:** 9 containerized microservices on ECS Fargate (marketdata, orchestrator, results, portfolio, data ingestion, regulatory, risk, worker, frontend/nginx), Cloud Map service discovery, Aurora PostgreSQL with RDS Proxy, ALB with single frontend target.
+
+**Live environment:** `http://iprs-alb-dev-1833924090.us-east-1.elb.amazonaws.com`
 
 **Known technical debt:**
 - Pre-existing compute stubs (allowance.py, rwa.py, stress_capital.py) superseded but not removed
 - Two stretch endpoints return 501 (hedge effectiveness, backtesting)
 - No connection pooling (sync connection-per-request)
 - Fixed volatility assumptions (20% flat for caps/floors)
+- No HTTPS/custom domain on ALB
+- No WAF or IP restriction on ALB
 
 ## Constraints
 
@@ -94,4 +100,4 @@ The risk team can run end-to-end portfolio analytics - from market data ingestio
 | Scaffold-first approach | Full structure before deep features | ✓ Good -- reduced rework |
 
 ---
-*Last updated: 2026-02-12 after v1.0 milestone*
+*Last updated: 2026-02-13 after v1.0 milestone completion*
