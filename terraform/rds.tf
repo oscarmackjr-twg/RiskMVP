@@ -30,7 +30,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
 resource "aws_rds_cluster" "main" {
   cluster_identifier      = "${var.project_name}-cluster-${var.environment}"
   engine                  = "aurora-postgresql"
-  engine_version          = "15.4"
+  engine_version          = "15.8"
   database_name           = var.db_name
   master_username         = var.db_master_username
   master_password         = var.db_master_password
@@ -111,9 +111,10 @@ resource "aws_db_proxy" "main" {
     auth_scheme = "SECRETS"
     secret_arn  = aws_secretsmanager_secret.db_credentials.arn
   }
-  role_arn               = aws_iam_role.rds_proxy.arn
-  vpc_subnet_ids         = aws_subnet.private[*].id
-  require_tls            = false
+  role_arn                = aws_iam_role.rds_proxy.arn
+  vpc_subnet_ids          = aws_subnet.private[*].id
+  vpc_security_group_ids  = [aws_security_group.rds_proxy.id]
+  require_tls             = false
 
   tags = {
     Name = "${var.project_name}-rds-proxy-${var.environment}"
@@ -164,6 +165,17 @@ resource "aws_security_group" "rds_proxy" {
   tags = {
     Name = "${var.project_name}-rds-proxy-sg-${var.environment}"
   }
+}
+
+# Allow RDS Proxy to reach RDS cluster (separate rule to avoid circular SG dependency)
+resource "aws_security_group_rule" "rds_from_proxy" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.rds.id
+  source_security_group_id = aws_security_group.rds_proxy.id
+  description              = "PostgreSQL from RDS Proxy"
 }
 
 # Attach security group to RDS Proxy

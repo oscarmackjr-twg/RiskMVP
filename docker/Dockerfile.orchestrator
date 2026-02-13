@@ -32,6 +32,10 @@ COPY services/run_orchestrator/ ./services/run_orchestrator/
 # Copy demo data for positions file access
 COPY demo/ ./demo/
 
+# Copy SQL migrations and migration runner for ECS Exec usage
+COPY sql/ ./sql/
+COPY scripts/migrate.py ./scripts/migrate.py
+
 # Environment configuration
 ENV DATABASE_URL="postgresql://postgres:postgres@db:5432/iprs"
 ENV POSITIONS_SNAPSHOT_PATH="/app/demo/inputs/positions.json"

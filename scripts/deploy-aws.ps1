@@ -85,7 +85,7 @@ try {
 # 5. Build and push images
 if (-not $SkipBuild) {
     Write-Host "`n[6/8] Building and pushing Docker images..." -ForegroundColor Yellow
-    & "$ROOT\scripts\build-images.ps1"
+    & "$ROOT\scripts\build-images.ps1" -ForAws
     & "$ROOT\scripts\push-ecr.ps1" -AccountId $AccountId -Region $Region
 } else {
     Write-Host "`n[6/8] Skipping build (--SkipBuild)" -ForegroundColor Yellow
@@ -107,7 +107,8 @@ $ECS_SERVICES = @(
     "iprs-portfolio-$Environment",
     "iprs-risk-$Environment",
     "iprs-regulatory-$Environment",
-    "iprs-ingestion-$Environment"
+    "iprs-ingestion-$Environment",
+    "iprs-frontend-$Environment"
 )
 
 foreach ($svc in $ECS_SERVICES) {

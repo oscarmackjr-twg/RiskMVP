@@ -6,6 +6,7 @@ import react from "@vitejs/plugin-react";
 //  - marketdata-svc:   http://127.0.0.1:8001
 //  - run-orchestrator: http://127.0.0.1:8002
 //  - results-api:      http://127.0.0.1:8003
+//  - regulatory-svc:   http://127.0.0.1:8007
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -24,6 +25,10 @@ export default defineConfig({
         target: "http://127.0.0.1:8003",
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/results/, ""),
+      },
+      "/api/v1/regulatory": {
+        target: "http://127.0.0.1:8007",
+        changeOrigin: true,
       },
     },
   },

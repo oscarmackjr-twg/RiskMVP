@@ -7,32 +7,26 @@ export default {
   theme: {
     extend: {
       colors: {
-        brutal: {
-          black: '#000000',
-          white: '#FFFFFF',
-          yellow: '#FFE500',
-          pink: '#FF6B9D',
-          blue: '#00D4FF',
-          green: '#00FF94',
-          orange: '#FF9500',
-          red: '#FF3B3B',
-          purple: '#B84DFF',
-          lime: '#C8FF00',
+        twg: {
+          navy: '#1B2A4A',
+          'navy-light': '#2C3E5A',
+          'tech-white': '#F5F7FA',
+          accent: '#2563EB',
+          'accent-light': '#3B82F6',
+          success: '#16A34A',
+          warning: '#D97706',
+          error: '#DC2626',
+          muted: '#64748B',
         }
       },
-      boxShadow: {
-        'brutal': '4px 4px 0px 0px #000000',
-        'brutal-md': '6px 6px 0px 0px #000000',
-        'brutal-lg': '8px 8px 0px 0px #000000',
-        'brutal-xl': '12px 12px 0px 0px #000000',
-        'brutal-hover': '2px 2px 0px 0px #000000',
-        'brutal-active': '0px 0px 0px 0px #000000',
-      },
       fontFamily: {
+        sans: ["'Gotham'", "'Helvetica Neue'", 'Helvetica', 'Arial', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
-      borderWidth: {
-        '3': '3px',
+      boxShadow: {
+        'card': '0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)',
+        'card-hover': '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)',
+        'elevated': '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)',
       },
     },
   },

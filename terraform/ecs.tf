@@ -71,11 +71,20 @@ resource "aws_iam_role" "ecs_task" {
   }
 }
 
+resource "aws_iam_role_policy_attachment" "ecs_task_ssm" {
+  role       = aws_iam_role.ecs_task.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 # Data source for current AWS account ID
 data "aws_caller_identity" "current" {}
 
 # Data source for current region
 data "aws_region" "current" {}
+
+# ============================================================
+# Task Definitions
+# ============================================================
 
 # Task Definition - Marketdata Service
 resource "aws_ecs_task_definition" "marketdata" {
@@ -250,288 +259,6 @@ resource "aws_ecs_task_definition" "worker" {
     Service = "worker"
   }
 }
-
-# Application Load Balancer
-resource "aws_lb" "main" {
-  name               = "${var.project_name}-alb-${var.environment}"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = aws_subnet.public[*].id
-
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "${var.project_name}-alb-${var.environment}"
-  }
-}
-
-# Target Group - Marketdata
-resource "aws_lb_target_group" "marketdata" {
-  name        = "${var.project_name}-mkt-tg-${var.environment}"
-  port        = 8001
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/health"
-    matcher             = "200"
-  }
-
-  tags = {
-    Name    = "${var.project_name}-marketdata-tg-${var.environment}"
-    Service = "marketdata"
-  }
-}
-
-# Target Group - Orchestrator
-resource "aws_lb_target_group" "orchestrator" {
-  name        = "${var.project_name}-orch-tg-${var.environment}"
-  port        = 8002
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/health"
-    matcher             = "200"
-  }
-
-  tags = {
-    Name    = "${var.project_name}-orchestrator-tg-${var.environment}"
-    Service = "orchestrator"
-  }
-}
-
-# Target Group - Results
-resource "aws_lb_target_group" "results" {
-  name        = "${var.project_name}-res-tg-${var.environment}"
-  port        = 8003
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/health"
-    matcher             = "200"
-  }
-
-  tags = {
-    Name    = "${var.project_name}-results-tg-${var.environment}"
-    Service = "results"
-  }
-}
-
-# ALB Listener (HTTP - for dev, redirect to HTTPS in prod)
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "404: Not Found"
-      status_code  = "404"
-    }
-  }
-
-  tags = {
-    Name = "${var.project_name}-alb-listener-http-${var.environment}"
-  }
-}
-
-# ALB Listener Rule - Marketdata (path-based routing)
-resource "aws_lb_listener_rule" "marketdata" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.marketdata.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/mkt/*"]
-    }
-  }
-
-  tags = {
-    Name    = "${var.project_name}-alb-rule-marketdata-${var.environment}"
-    Service = "marketdata"
-  }
-}
-
-# ALB Listener Rule - Orchestrator (path-based routing)
-resource "aws_lb_listener_rule" "orchestrator" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 200
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.orchestrator.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/orch/*"]
-    }
-  }
-
-  tags = {
-    Name    = "${var.project_name}-alb-rule-orchestrator-${var.environment}"
-    Service = "orchestrator"
-  }
-}
-
-# ALB Listener Rule - Results (path-based routing)
-resource "aws_lb_listener_rule" "results" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 300
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.results.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/results/*"]
-    }
-  }
-
-  tags = {
-    Name    = "${var.project_name}-alb-rule-results-${var.environment}"
-    Service = "results"
-  }
-}
-
-# ECS Service - Marketdata
-resource "aws_ecs_service" "marketdata" {
-  name            = "${var.project_name}-marketdata-${var.environment}"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.marketdata.arn
-  desired_count   = 2
-  launch_type     = "FARGATE"
-
-  network_configuration {
-    subnets          = aws_subnet.private[*].id
-    security_groups  = [aws_security_group.ecs_tasks.id]
-    assign_public_ip = false
-  }
-
-  load_balancer {
-    target_group_arn = aws_lb_target_group.marketdata.arn
-    container_name   = "marketdata"
-    container_port   = 8001
-  }
-
-  depends_on = [aws_lb_listener.http]
-
-  tags = {
-    Name    = "${var.project_name}-marketdata-service-${var.environment}"
-    Service = "marketdata"
-  }
-}
-
-# ECS Service - Orchestrator
-resource "aws_ecs_service" "orchestrator" {
-  name            = "${var.project_name}-orchestrator-${var.environment}"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.orchestrator.arn
-  desired_count   = 2
-  launch_type     = "FARGATE"
-
-  network_configuration {
-    subnets          = aws_subnet.private[*].id
-    security_groups  = [aws_security_group.ecs_tasks.id]
-    assign_public_ip = false
-  }
-
-  load_balancer {
-    target_group_arn = aws_lb_target_group.orchestrator.arn
-    container_name   = "orchestrator"
-    container_port   = 8002
-  }
-
-  depends_on = [aws_lb_listener.http]
-
-  tags = {
-    Name    = "${var.project_name}-orchestrator-service-${var.environment}"
-    Service = "orchestrator"
-  }
-}
-
-# ECS Service - Results
-resource "aws_ecs_service" "results" {
-  name            = "${var.project_name}-results-${var.environment}"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.results.arn
-  desired_count   = 2
-  launch_type     = "FARGATE"
-
-  network_configuration {
-    subnets          = aws_subnet.private[*].id
-    security_groups  = [aws_security_group.ecs_tasks.id]
-    assign_public_ip = false
-  }
-
-  load_balancer {
-    target_group_arn = aws_lb_target_group.results.arn
-    container_name   = "results"
-    container_port   = 8003
-  }
-
-  depends_on = [aws_lb_listener.http]
-
-  tags = {
-    Name    = "${var.project_name}-results-service-${var.environment}"
-    Service = "results"
-  }
-}
-
-# ECS Service - Worker
-resource "aws_ecs_service" "worker" {
-  name            = "${var.project_name}-worker-${var.environment}"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.worker.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
-
-  network_configuration {
-    subnets          = aws_subnet.private[*].id
-    security_groups  = [aws_security_group.ecs_tasks.id]
-    assign_public_ip = false
-  }
-
-  tags = {
-    Name    = "${var.project_name}-worker-service-${var.environment}"
-    Service = "worker"
-  }
-}
-
-# ============================================================
-# Phase 2+ Services: Portfolio, Risk, Regulatory, Ingestion
-# ============================================================
 
 # Task Definition - Portfolio Service
 resource "aws_ecs_task_definition" "portfolio" {
@@ -709,10 +436,66 @@ resource "aws_ecs_task_definition" "ingestion" {
   }
 }
 
-# Target Group - Portfolio
-resource "aws_lb_target_group" "portfolio" {
-  name        = "${var.project_name}-port-tg-${var.environment}"
-  port        = 8005
+# Task Definition - Frontend (nginx + React SPA)
+resource "aws_ecs_task_definition" "frontend" {
+  family                   = "${var.project_name}-frontend-${var.environment}"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "frontend"
+      image     = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/${aws_ecr_repository.frontend.name}:latest"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          protocol      = "tcp"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
+          "awslogs-region"        = data.aws_region.current.name
+          "awslogs-stream-prefix" = "frontend"
+        }
+      }
+    }
+  ])
+
+  tags = {
+    Name    = "${var.project_name}-frontend-task-${var.environment}"
+    Service = "frontend"
+  }
+}
+
+# ============================================================
+# Application Load Balancer — routes all traffic to frontend
+# ============================================================
+
+resource "aws_lb" "main" {
+  name               = "${var.project_name}-alb-${var.environment}"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = aws_subnet.public[*].id
+
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "${var.project_name}-alb-${var.environment}"
+  }
+}
+
+# Single target group — frontend nginx handles all path-based routing
+resource "aws_lb_target_group" "frontend" {
+  name        = "${var.project_name}-fe-tg-${var.environment}"
+  port        = 80
   protocol    = "HTTP"
   vpc_id      = aws_vpc.main.id
   target_type = "ip"
@@ -723,183 +506,44 @@ resource "aws_lb_target_group" "portfolio" {
     unhealthy_threshold = 3
     timeout             = 5
     interval            = 30
-    path                = "/health"
+    path                = "/"
     matcher             = "200"
   }
 
   tags = {
-    Name    = "${var.project_name}-portfolio-tg-${var.environment}"
-    Service = "portfolio"
+    Name    = "${var.project_name}-frontend-tg-${var.environment}"
+    Service = "frontend"
   }
 }
 
-# Target Group - Risk
-resource "aws_lb_target_group" "risk" {
-  name        = "${var.project_name}-risk-tg-${var.environment}"
-  port        = 8006
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "ip"
+# ALB Listener — forward everything to frontend
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
 
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/health"
-    matcher             = "200"
-  }
-
-  tags = {
-    Name    = "${var.project_name}-risk-tg-${var.environment}"
-    Service = "risk"
-  }
-}
-
-# Target Group - Regulatory
-resource "aws_lb_target_group" "regulatory" {
-  name        = "${var.project_name}-reg-tg-${var.environment}"
-  port        = 8007
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/health"
-    matcher             = "200"
-  }
-
-  tags = {
-    Name    = "${var.project_name}-regulatory-tg-${var.environment}"
-    Service = "regulatory"
-  }
-}
-
-# Target Group - Ingestion
-resource "aws_lb_target_group" "ingestion" {
-  name        = "${var.project_name}-ing-tg-${var.environment}"
-  port        = 8008
-  protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/health"
-    matcher             = "200"
-  }
-
-  tags = {
-    Name    = "${var.project_name}-ingestion-tg-${var.environment}"
-    Service = "ingestion"
-  }
-}
-
-# ALB Listener Rule - Portfolio
-resource "aws_lb_listener_rule" "portfolio" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 400
-
-  action {
+  default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.portfolio.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/portfolio/*"]
-    }
+    target_group_arn = aws_lb_target_group.frontend.arn
   }
 
   tags = {
-    Name    = "${var.project_name}-alb-rule-portfolio-${var.environment}"
-    Service = "portfolio"
+    Name = "${var.project_name}-alb-listener-http-${var.environment}"
   }
 }
 
-# ALB Listener Rule - Risk
-resource "aws_lb_listener_rule" "risk" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 500
+# ============================================================
+# ECS Services — backend (internal, Cloud Map only)
+# ============================================================
 
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.risk.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/risk/*"]
-    }
-  }
-
-  tags = {
-    Name    = "${var.project_name}-alb-rule-risk-${var.environment}"
-    Service = "risk"
-  }
-}
-
-# ALB Listener Rule - Regulatory
-resource "aws_lb_listener_rule" "regulatory" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 600
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.regulatory.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/regulatory/*"]
-    }
-  }
-
-  tags = {
-    Name    = "${var.project_name}-alb-rule-regulatory-${var.environment}"
-    Service = "regulatory"
-  }
-}
-
-# ALB Listener Rule - Ingestion
-resource "aws_lb_listener_rule" "ingestion" {
-  listener_arn = aws_lb_listener.http.arn
-  priority     = 700
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.ingestion.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/ingestion/*"]
-    }
-  }
-
-  tags = {
-    Name    = "${var.project_name}-alb-rule-ingestion-${var.environment}"
-    Service = "ingestion"
-  }
-}
-
-# ECS Service - Portfolio
-resource "aws_ecs_service" "portfolio" {
-  name            = "${var.project_name}-portfolio-${var.environment}"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.portfolio.arn
-  desired_count   = 2
-  launch_type     = "FARGATE"
+# ECS Service - Marketdata
+resource "aws_ecs_service" "marketdata" {
+  name                   = "${var.project_name}-marketdata-${var.environment}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.marketdata.arn
+  desired_count          = 2
+  launch_type            = "FARGATE"
+  enable_execute_command = true
 
   network_configuration {
     subnets          = aws_subnet.private[*].id
@@ -907,13 +551,110 @@ resource "aws_ecs_service" "portfolio" {
     assign_public_ip = false
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.portfolio.arn
-    container_name   = "portfolio"
-    container_port   = 8005
+  service_registries {
+    registry_arn = aws_service_discovery_service.marketdata.arn
   }
 
-  depends_on = [aws_lb_listener.http]
+  tags = {
+    Name    = "${var.project_name}-marketdata-service-${var.environment}"
+    Service = "marketdata"
+  }
+}
+
+# ECS Service - Orchestrator
+resource "aws_ecs_service" "orchestrator" {
+  name                   = "${var.project_name}-orchestrator-${var.environment}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.orchestrator.arn
+  desired_count          = 2
+  launch_type            = "FARGATE"
+  enable_execute_command = true
+
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.orchestrator.arn
+  }
+
+  tags = {
+    Name    = "${var.project_name}-orchestrator-service-${var.environment}"
+    Service = "orchestrator"
+  }
+}
+
+# ECS Service - Results
+resource "aws_ecs_service" "results" {
+  name                   = "${var.project_name}-results-${var.environment}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.results.arn
+  desired_count          = 2
+  launch_type            = "FARGATE"
+  enable_execute_command = true
+
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.results.arn
+  }
+
+  tags = {
+    Name    = "${var.project_name}-results-service-${var.environment}"
+    Service = "results"
+  }
+}
+
+# ECS Service - Worker (no port mapping, no service registry needed for discovery
+# but registered for visibility in Cloud Map)
+resource "aws_ecs_service" "worker" {
+  name                   = "${var.project_name}-worker-${var.environment}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.worker.arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
+  enable_execute_command = true
+
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.worker.arn
+  }
+
+  tags = {
+    Name    = "${var.project_name}-worker-service-${var.environment}"
+    Service = "worker"
+  }
+}
+
+# ECS Service - Portfolio
+resource "aws_ecs_service" "portfolio" {
+  name                   = "${var.project_name}-portfolio-${var.environment}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.portfolio.arn
+  desired_count          = 2
+  launch_type            = "FARGATE"
+  enable_execute_command = true
+
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.portfolio.arn
+  }
 
   tags = {
     Name    = "${var.project_name}-portfolio-service-${var.environment}"
@@ -923,11 +664,12 @@ resource "aws_ecs_service" "portfolio" {
 
 # ECS Service - Risk
 resource "aws_ecs_service" "risk" {
-  name            = "${var.project_name}-risk-${var.environment}"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.risk.arn
-  desired_count   = 2
-  launch_type     = "FARGATE"
+  name                   = "${var.project_name}-risk-${var.environment}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.risk.arn
+  desired_count          = 2
+  launch_type            = "FARGATE"
+  enable_execute_command = true
 
   network_configuration {
     subnets          = aws_subnet.private[*].id
@@ -935,13 +677,9 @@ resource "aws_ecs_service" "risk" {
     assign_public_ip = false
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.risk.arn
-    container_name   = "risk"
-    container_port   = 8006
+  service_registries {
+    registry_arn = aws_service_discovery_service.risk.arn
   }
-
-  depends_on = [aws_lb_listener.http]
 
   tags = {
     Name    = "${var.project_name}-risk-service-${var.environment}"
@@ -951,11 +689,12 @@ resource "aws_ecs_service" "risk" {
 
 # ECS Service - Regulatory
 resource "aws_ecs_service" "regulatory" {
-  name            = "${var.project_name}-regulatory-${var.environment}"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.regulatory.arn
-  desired_count   = 2
-  launch_type     = "FARGATE"
+  name                   = "${var.project_name}-regulatory-${var.environment}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.regulatory.arn
+  desired_count          = 2
+  launch_type            = "FARGATE"
+  enable_execute_command = true
 
   network_configuration {
     subnets          = aws_subnet.private[*].id
@@ -963,13 +702,9 @@ resource "aws_ecs_service" "regulatory" {
     assign_public_ip = false
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.regulatory.arn
-    container_name   = "regulatory"
-    container_port   = 8007
+  service_registries {
+    registry_arn = aws_service_discovery_service.regulatory.arn
   }
-
-  depends_on = [aws_lb_listener.http]
 
   tags = {
     Name    = "${var.project_name}-regulatory-service-${var.environment}"
@@ -979,11 +714,40 @@ resource "aws_ecs_service" "regulatory" {
 
 # ECS Service - Ingestion
 resource "aws_ecs_service" "ingestion" {
-  name            = "${var.project_name}-ingestion-${var.environment}"
-  cluster         = aws_ecs_cluster.main.id
-  task_definition = aws_ecs_task_definition.ingestion.arn
-  desired_count   = 2
-  launch_type     = "FARGATE"
+  name                   = "${var.project_name}-ingestion-${var.environment}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.ingestion.arn
+  desired_count          = 2
+  launch_type            = "FARGATE"
+  enable_execute_command = true
+
+  network_configuration {
+    subnets          = aws_subnet.private[*].id
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = false
+  }
+
+  service_registries {
+    registry_arn = aws_service_discovery_service.ingestion.arn
+  }
+
+  tags = {
+    Name    = "${var.project_name}-ingestion-service-${var.environment}"
+    Service = "ingestion"
+  }
+}
+
+# ============================================================
+# ECS Service — Frontend (ALB-facing)
+# ============================================================
+
+resource "aws_ecs_service" "frontend" {
+  name                   = "${var.project_name}-frontend-${var.environment}"
+  cluster                = aws_ecs_cluster.main.id
+  task_definition        = aws_ecs_task_definition.frontend.arn
+  desired_count          = 2
+  launch_type            = "FARGATE"
+  enable_execute_command = true
 
   network_configuration {
     subnets          = aws_subnet.private[*].id
@@ -992,15 +756,15 @@ resource "aws_ecs_service" "ingestion" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.ingestion.arn
-    container_name   = "ingestion"
-    container_port   = 8008
+    target_group_arn = aws_lb_target_group.frontend.arn
+    container_name   = "frontend"
+    container_port   = 80
   }
 
   depends_on = [aws_lb_listener.http]
 
   tags = {
-    Name    = "${var.project_name}-ingestion-service-${var.environment}"
-    Service = "ingestion"
+    Name    = "${var.project_name}-frontend-service-${var.environment}"
+    Service = "frontend"
   }
 }

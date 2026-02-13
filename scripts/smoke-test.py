@@ -13,6 +13,7 @@ import argparse
 import json
 import sys
 import time
+from urllib.parse import urlparse
 
 try:
     import requests
@@ -20,15 +21,15 @@ except ImportError:
     print("ERROR: 'requests' package required. Install with: pip install requests")
     sys.exit(1)
 
-# Service definitions: (name, port, health_path)
+# Service definitions: (name, port, health_path, alb_prefix)
 SERVICES = [
-    ("marketdata",   8001, "/health"),
-    ("orchestrator", 8002, "/health"),
-    ("results",      8003, "/health"),
-    ("portfolio",    8005, "/health"),
-    ("risk",         8006, "/health"),
-    ("regulatory",   8007, "/health"),
-    ("ingestion",    8008, "/health"),
+    ("marketdata",   8001, "/health", "/mkt"),
+    ("orchestrator", 8002, "/health", "/orch"),
+    ("results",      8003, "/health", "/results"),
+    ("portfolio",    8005, "/health", "/portfolio"),
+    ("risk",         8006, "/health", "/risk"),
+    ("regulatory",   8007, "/health", "/regulatory"),
+    ("ingestion",    8008, "/health", "/ingestion"),
 ]
 
 # Demo market snapshot for testing
@@ -77,6 +78,18 @@ class SmokeTest:
         self.failed = 0
         self.errors: list[str] = []
 
+        # Determine if we're running against localhost (direct port access)
+        # or a remote ALB (path-prefix routing via nginx)
+        parsed = urlparse(self.base_url)
+        self.is_local = parsed.hostname in ("localhost", "127.0.0.1")
+
+    def _service_url(self, name: str, port: int, path: str, alb_prefix: str) -> str:
+        """Build the correct URL for a service endpoint."""
+        if self.is_local:
+            return f"http://localhost:{port}{path}"
+        else:
+            return f"{self.base_url}{alb_prefix}{path}"
+
     def check(self, name: str, ok: bool, detail: str = ""):
         if ok:
             print(f"  PASS: {name}")
@@ -102,18 +115,18 @@ class SmokeTest:
     def test_health_checks(self):
         """Test /health on all services."""
         print("\n[1/6] Health Checks")
-        for name, port, path in SERVICES:
-            url = f"http://localhost:{port}{path}"
+        for name, port, path, alb_prefix in SERVICES:
+            url = self._service_url(name, port, path, alb_prefix)
             resp = self._get(url)
             ok = resp is not None and resp.status_code == 200
             detail = "" if ok else f"HTTP {resp.status_code}" if resp else "connection refused"
-            self.check(f"{name} ({port})", ok, detail)
+            self.check(f"{name} ({url})", ok, detail)
 
     def test_deep_health(self):
         """Test /health/deep (DB connectivity) on core services."""
         print("\n[2/6] Deep Health (DB connectivity)")
-        for name, port, _ in SERVICES:
-            url = f"http://localhost:{port}/health/deep"
+        for name, port, _, alb_prefix in SERVICES:
+            url = self._service_url(name, port, "/health/deep", alb_prefix)
             resp = self._get(url)
             if resp and resp.status_code == 200:
                 body = resp.json()
@@ -125,7 +138,10 @@ class SmokeTest:
     def test_market_data(self) -> str | None:
         """POST demo snapshot, GET it back."""
         print("\n[3/6] Market Data Upload")
-        url = f"http://localhost:8001/api/v1/marketdata/snapshots"
+        if self.is_local:
+            url = "http://localhost:8001/api/v1/marketdata/snapshots"
+        else:
+            url = f"{self.base_url}/mkt/api/v1/marketdata/snapshots"
 
         resp = self._post(url, DEMO_SNAPSHOT)
         if resp and resp.status_code in (200, 201):
@@ -157,7 +173,11 @@ class SmokeTest:
             "execution": {"hash_mod": 1},
         }
 
-        url = "http://localhost:8002/api/v1/runs"
+        if self.is_local:
+            url = "http://localhost:8002/api/v1/runs"
+        else:
+            url = f"{self.base_url}/orch/api/v1/runs"
+
         resp = self._post(url, run_request)
         if not resp or resp.status_code not in (200, 201):
             detail = f"HTTP {resp.status_code}" if resp else "connection refused"
@@ -170,9 +190,14 @@ class SmokeTest:
 
         # Poll for completion (max 60s)
         print("  Polling for completion...")
+        if self.is_local:
+            status_base = "http://localhost:8002/api/v1/runs"
+        else:
+            status_base = f"{self.base_url}/orch/api/v1/runs"
+
         for i in range(30):
             time.sleep(2)
-            status_resp = self._get(f"http://localhost:8002/api/v1/runs/{run_id}")
+            status_resp = self._get(f"{status_base}/{run_id}")
             if status_resp and status_resp.status_code == 200:
                 status = status_resp.json().get("status", "")
                 if status == "COMPLETED":
@@ -190,8 +215,13 @@ class SmokeTest:
         """GET results summary and cube."""
         print("\n[5/6] Results Retrieval")
 
+        if self.is_local:
+            results_base = "http://localhost:8003/api/v1/results"
+        else:
+            results_base = f"{self.base_url}/results/api/v1/results"
+
         # Summary
-        url = f"http://localhost:8003/api/v1/results/{run_id}/summary"
+        url = f"{results_base}/{run_id}/summary"
         resp = self._get(url)
         if resp and resp.status_code == 200:
             body = resp.json()
@@ -200,7 +230,7 @@ class SmokeTest:
             self.check("GET summary", False, f"HTTP {resp.status_code}" if resp else "connection refused")
 
         # Cube
-        url = f"http://localhost:8003/api/v1/results/{run_id}/cube"
+        url = f"{results_base}/{run_id}/cube"
         resp = self._get(url)
         if resp and resp.status_code == 200:
             body = resp.json()
@@ -213,13 +243,17 @@ class SmokeTest:
     def test_frontend(self):
         """Check that the frontend is serving."""
         print("\n[6/6] Frontend")
-        resp = self._get("http://localhost:80/")
+        if self.is_local:
+            url = "http://localhost:80/"
+        else:
+            url = f"{self.base_url}/"
+
+        resp = self._get(url)
         if resp and resp.status_code == 200:
             has_html = "<html" in resp.text.lower() or "<!doctype" in resp.text.lower()
             self.check("Frontend loads", has_html, "" if has_html else "no HTML content")
         else:
-            # Try without explicit port (might be on 80)
-            self.check("Frontend loads", False, "not reachable on port 80")
+            self.check("Frontend loads", False, "not reachable")
 
     def summary(self) -> int:
         """Print summary and return exit code."""

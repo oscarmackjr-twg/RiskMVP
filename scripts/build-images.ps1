@@ -1,7 +1,8 @@
 # build-images.ps1 — Build all IPRS Docker images with commit SHA tags
 # Usage: .\scripts\build-images.ps1
 param(
-    [string]$Tag = ""
+    [string]$Tag = "",
+    [switch]$ForAws
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,7 +32,11 @@ $results = @()
 
 foreach ($img in $images) {
     Write-Host "`nBuilding $($img.Name)..." -ForegroundColor Yellow
-    docker build -t "$($img.Name):$Tag" -t "$($img.Name):latest" -f "$ROOT\$($img.Dockerfile)" $ROOT
+    $buildArgs = @()
+    if ($ForAws -and $img.Name -eq "iprs-frontend") {
+        $buildArgs = @("--build-arg", "NGINX_CONF=docker/nginx-aws.conf")
+    }
+    docker build @buildArgs -t "$($img.Name):$Tag" -t "$($img.Name):latest" -f "$ROOT\$($img.Dockerfile)" $ROOT
     if ($LASTEXITCODE -eq 0) {
         Write-Host "  $($img.Name): OK" -ForegroundColor Green
         $results += @{ Name = $img.Name; Status = "OK" }

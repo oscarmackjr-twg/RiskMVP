@@ -153,10 +153,18 @@ resource "aws_security_group" "ecs_tasks" {
 
   ingress {
     description     = "Allow traffic from ALB"
-    from_port       = 8001
-    to_port         = 8008
+    from_port       = 80
+    to_port         = 80
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    description = "Allow inter-service traffic (nginx to backends)"
+    from_port   = 8001
+    to_port     = 8008
+    protocol    = "tcp"
+    self        = true
   }
 
   egress {

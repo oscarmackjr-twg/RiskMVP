@@ -21,7 +21,9 @@ FROM nginx:alpine
 RUN rm /etc/nginx/conf.d/default.conf
 
 # Copy custom nginx config for API reverse proxy
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+# Override with --build-arg NGINX_CONF=docker/nginx-aws.conf for AWS deployment
+ARG NGINX_CONF=docker/nginx.conf
+COPY ${NGINX_CONF} /etc/nginx/conf.d/default.conf
 
 # Copy built React app
 COPY --from=builder /build/dist /usr/share/nginx/html
